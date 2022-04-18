@@ -8,10 +8,13 @@ from typing import Dict
 debug: bool = True
 
 app_title: str = "PythonBaseApi"
-app_description: str = "Base Python API Model"
+app_description: str = "Project base to create web Rest API with Python over Fastify framework."
 app_version: str = "0.1.0"
-app_license: Dict[str, str] = {"name": "MIT License", "url": "https://opensource.org/licenses/MIT"}
-app_contact: Dict[str, str] = {"name": "Christophe LEMOINE",  "url": "", "email": "pantaflex@tuta.io"}
+app_license: Dict[str, str] = {"name": "MIT License",
+                               "url": "https://opensource.org/licenses/MIT"}
+app_contact: Dict[str, str] = {"name": "Christophe LEMOINE",
+                               "url": "https://github.com/pantaflex44/PythonBaseApi",
+                               "email": "pantaflex@tuta.io"}
 app_terms: str = ""
 
 api_scheme: str = "https"
