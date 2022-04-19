@@ -12,11 +12,11 @@ from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
 
-from models.userModels import User
-from models.methods.userMethods import get_user_ex
+from models.authModels import User
+from models.methods.authMethods import get_user_ex
 
 from schemas.authSchemas import CurrentCredentials, TokenSchema, LoginSchema, UpdateTokenSchema
-from schemas.userSchemas import UserProfile, UserProfileEx
+from schemas.authSchemas import UserProfile, UserProfileEx
 
 
 router: APIRouter = APIRouter(prefix="/auth", tags=["auth"])

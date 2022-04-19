@@ -16,7 +16,7 @@ from fastapi import (
     HTTPException
 )
 
-from models.methods.userMethods import (
+from models.methods.authMethods import (
     access_to_schema,
     add_role_to_access,
     add_roles_to_access,
@@ -26,10 +26,10 @@ from models.methods.userMethods import (
     remove_role_to_access,
     remove_roles_to_access
 )
-from models.userModels import Access, Role
+from models.authModels import Access, Role
 
 from schemas.authSchemas import CurrentCredentials
-from schemas.userSchemas import (
+from schemas.authSchemas import (
     AccessSchema,
     AccessSchemaMin,
     AddRemoveRoleSchema,

@@ -16,11 +16,11 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from sqlalchemy.orm import Session
 
-from models.userModels import Role, User, Access
-from models.methods.userMethods import get_higher_role_level, get_user
+from models.authModels import Role, User, Access
+from models.methods.authMethods import get_higher_role_level, get_user
 from schemas.authSchemas import CurrentCredentials
 
-from schemas.userSchemas import UserProfile
+from schemas.authSchemas import UserProfile
 
 
 def signJWT(id: int, username: str) -> Dict[str, str]:

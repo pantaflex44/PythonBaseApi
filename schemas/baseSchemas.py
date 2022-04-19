@@ -5,5 +5,5 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class About(BaseModel):
+class AboutSchema(BaseModel):
     message: Optional[str] = Field(None, example="PythonBaseApi v0.1.0 - Base Python API Model")

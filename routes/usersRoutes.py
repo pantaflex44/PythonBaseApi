@@ -16,7 +16,7 @@ from fastapi import (
     HTTPException
 )
 
-from models.methods.userMethods import (
+from models.methods.authMethods import (
     User,
     create_user,
     get_user,
@@ -25,7 +25,7 @@ from models.methods.userMethods import (
 )
 
 from schemas.authSchemas import CurrentCredentials
-from schemas.userSchemas import (
+from schemas.authSchemas import (
     CreateSchema,
     UserProfile
 )

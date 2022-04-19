@@ -12,9 +12,9 @@ from core.sql import db_session
 
 from sqlalchemy.orm import Session
 
-from models.userModels import Access, User, Profile, Role
+from models.authModels import Access, User, Profile, Role
 
-from schemas.userSchemas import AccessSchema, RoleSchema, UserProfile, UserProfileEx
+from schemas.authSchemas import AccessSchema, RoleSchema, UserProfile, UserProfileEx
 
 
 def get_user_ex(filters: list[MethodType]) -> UserProfileEx:
