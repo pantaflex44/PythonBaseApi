@@ -3,7 +3,7 @@
 
 from types import MethodType
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, Query, status
 
 from sqlalchemy import asc, desc
 
@@ -61,7 +61,7 @@ def get_user(filters: list[MethodType]) -> UserProfile:
     return UserProfile(**userEx.__dict__)
 
 
-def get_users(offset: int = 0, limit: int = 1) -> list[UserProfile]:
+def get_users(filter: list[MethodType] = None, offset: int = 0, limit: int = 1) -> list[UserProfile]:
     """Return all users profile
 
     Args:
@@ -73,7 +73,13 @@ def get_users(offset: int = 0, limit: int = 1) -> list[UserProfile]:
     """
     db: Session = db_session.get()
 
-    users: list[User] = db.query(User).offset(offset).limit(limit).all()
+    users_query: Query = db.query(User)
+
+    if filter is not None:
+        users_query = users_query.filter(*filter)
+
+    users: list[User] = users_query.offset(offset).limit(limit).all()
+
     usersList: list[UserProfile] = []
 
     for item in users:
@@ -282,6 +288,32 @@ def remove_role_to_access(access_id: int, role_id: int) -> Access:
     return access
 
 
+def remove_role_to_all_access(role_id: int):
+    """Remove a role to all access
+
+    Args:
+        role_id (int): Role identifier
+    """
+    db: Session = db_session.get()
+
+    accesses: list[Access] = get_accesses()
+    for access in accesses:
+        if role_id in access.role_ids and len(access.role_ids) > 1:
+            role_ids = access.role_ids
+            role_ids.remove(role_id)
+
+            if len(role_ids) == 0:
+                higher_role: Role = get_higher_role()
+                if higher_role is None:
+                    continue
+
+                role_ids = role_ids + higher_role.id
+
+            db.query(Access).filter(Access.id == access.id).update({Access.role_ids: role_ids})
+            db.commit()
+            db.refresh(access)
+
+
 def remove_roles_to_access(access_id: int, role_ids: list[int]) -> Access:
     """Remove roles to an access
 
@@ -410,3 +442,104 @@ def get_roles(offset: int = 0, limit: int = 1) -> list[Role]:
 
     roles: list[Role] = db.query(Role).offset(offset).limit(limit).all()
     return roles
+
+
+def role_level_exists(level: int) -> bool:
+    """Role level exists
+
+    Args:
+        level (int): Role level
+
+    Returns:
+        bool: True, role level exists, else, False
+    """
+    db: Session = db_session.get()
+
+    role: Role = db.query(Role).filter(Role.role_level == level).limit(1).first()
+    return role is not None
+
+
+def role_name_exists(name: str) -> bool:
+    """Role name exists
+
+    Args:
+        name (str): Role name
+
+    Returns:
+        bool: True, role name exists, else, False
+    """
+    db: Session = db_session.get()
+
+    role: Role = db.query(Role).filter(Role.role_name.like(name)).limit(1).first()
+    return role is not None
+
+
+def create_role(role_name: str, role_level: int) -> Role:
+    """Create new role
+
+    Args:
+        role_name (str): Role name
+        role_level (int): Role level
+
+    Returns:
+        Role: New created role
+    """
+    db: Session = db_session.get()
+
+    role: Role = Role(role_name=role_name, role_level=role_level)
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+
+    return role
+
+
+def update_role(role_id: int, role_name: str = None, role_level: int = None) -> Role:
+    """Update role
+
+    Args:
+        role_id (int): Role ID to update.
+        role_name (str): Role name. Default to None.
+        role_level (int): Role level. Default to None.
+
+    Returns:
+        Role: Updated Role
+    """
+    db: Session = db_session.get()
+
+    role: Role = get_role([Role.id == role_id])
+    if role is None:
+        return None
+
+    if role_name is None:
+        role_name = role.role_name
+
+    if role_level is None:
+        role_level = role.role_level
+
+    db.query(Role).filter(Role.id == role_id).update({Role.role_name: role_name, Role.role_level: role_level})
+    db.commit()
+    db.refresh(role)
+
+    return role
+
+
+def delete_role(role_id: int) -> bool:
+    """Delete a Role
+
+    Args:
+        role_id (int): Role ID to delete
+
+    Returns:
+        bool: True, Role is deleted, else, False
+    """
+    db: Session = db_session.get()
+
+    role: Role = get_role([Role.id == role_id])
+    if role is None:
+        return False
+
+    db.delete(role)
+    db.commit()
+
+    return True

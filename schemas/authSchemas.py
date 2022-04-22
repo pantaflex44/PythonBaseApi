@@ -13,6 +13,8 @@ from schemas.validators.authValidators import (
     validate_display_name_format,
     validate_email_format,
     validate_passwords_format,
+    validate_role_level_format,
+    validate_role_name_format,
     validate_username_format
 )
 
@@ -76,6 +78,14 @@ class ProfileSchema(ProfileBase):
 class RoleBase(BaseModel):
     role_name: str = Field(...)
     role_level: int = Field(...)
+
+    @validator('role_name', allow_reuse=True)
+    def role_name_format(cls, v: str):
+        return validate_role_name_format(v)
+
+    @validator('role_level', allow_reuse=True)
+    def role_level_format(cls, v: int):
+        return validate_role_level_format(v)
 
 
 class RoleSchema(RoleBase):

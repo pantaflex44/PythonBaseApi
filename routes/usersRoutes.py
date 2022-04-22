@@ -48,7 +48,7 @@ async def route_get_all_users(offset: Optional[int] = Query(0, ge=0),
     Returns:
         list[UserProfile]: List of User accounts and profiles
     """
-    return get_users(offset, limit)
+    return get_users(offset=offset, limit=limit)
 
 
 @router.get('/get/{id}', status_code=status.HTTP_200_OK, response_model=UserProfile)

@@ -122,3 +122,29 @@ def verify_email(email: str) -> bool:
     return re.fullmatch(
         r"([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\[[\t -Z^-~]*])",
         email) is not None
+
+
+def verify_role_name(role_name: str) -> bool:
+    """Verify role name format.
+    Min 3 to 255 characters, only lowercase, uppercase, digits, underscore and point chars.
+
+    Args:
+        role_name (str): Role name
+
+    Returns:
+        bool: True, role name correctly formatted, else, False
+    """
+    return re.match(r'^(?=[a-zA-Z0-9._]{3,255}$)(?!.*[_.]{2})[^_.].*[^_.]$', role_name) is not None
+
+
+def verify_role_level(role_level: int) -> bool:
+    """Verify role level format.
+    Min 1 to 99.
+
+    Args:
+        role_level (int): Role level
+
+    Returns:
+        bool: True, role lvel correctly formatted, else, False
+    """
+    return 99 >= role_level >= 1

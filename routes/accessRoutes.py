@@ -121,7 +121,7 @@ async def route_get_all_accesses_for_role(role_id: int = Path(..., ge=1),
     return RoleAccessSchema(role=role_schema, accesses=accesses_schemas)
 
 
-@router.post('/{access_id}/add_role', status_code=status.HTTP_200_OK, response_model=AccessSchema)
+@router.put('/{access_id}/add_role', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_add_role_to_access(access_id: int = Path(..., ge=1),
                                    add: AddRemoveRoleSchema = Body(...),
                                    credentials: CurrentCredentials = Depends(access)):
@@ -146,7 +146,7 @@ async def route_add_role_to_access(access_id: int = Path(..., ge=1),
     return access_to_schema(access)
 
 
-@router.post('/{access_id}/add_roles', status_code=status.HTTP_200_OK, response_model=AccessSchema)
+@router.put('/{access_id}/add_roles', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_add_roles_to_access(access_id: int = Path(..., ge=1),
                                     add: AddRemoveRolesSchema = Body(...),
                                     credentials: CurrentCredentials = Depends(access)):
@@ -171,7 +171,7 @@ async def route_add_roles_to_access(access_id: int = Path(..., ge=1),
     return access_to_schema(access)
 
 
-@router.post('/{access_id}/remove_role', status_code=status.HTTP_200_OK, response_model=AccessSchema)
+@router.put('/{access_id}/remove_role', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_remove_role_to_access(access_id: int = Path(..., ge=1),
                                       remove: AddRemoveRoleSchema = Body(...),
                                       credentials: CurrentCredentials = Depends(access)):
@@ -196,7 +196,7 @@ async def route_remove_role_to_access(access_id: int = Path(..., ge=1),
     return access_to_schema(access)
 
 
-@router.post('/{access_id}/remove_roles', status_code=status.HTTP_200_OK, response_model=AccessSchema)
+@router.put('/{access_id}/remove_roles', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_remove_roles_to_access(access_id: int = Path(..., ge=1),
                                        remove: AddRemoveRolesSchema = Body(...),
                                        credentials: CurrentCredentials = Depends(access)):
