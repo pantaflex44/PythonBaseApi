@@ -2,7 +2,6 @@
 # -*- encoding: utf-8 -*-
 
 from contextvars import ContextVar
-import sys
 
 from fastapi import FastAPI
 

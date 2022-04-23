@@ -1,0 +1,7 @@
+fastapi==0.75.2
+pydantic==1.9.0
+PyJWT==2.3.0
+slowapi==0.1.5
+SQLAlchemy==1.4.35
+SQLAlchemy_Utils==0.38.2
+uvicorn==0.17.6

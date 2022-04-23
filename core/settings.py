@@ -38,7 +38,7 @@ jwt_cookie_name: str = "PBA_Token"
 sql_scheme: str = "mysql+pymysql"
 sql_database_name: str = "PythonBaseApi"
 sql_username: str = "app"
-sql_password: str = "Root1234!"
+sql_password: str = "Admin1234!"
 sql_host: str = "127.0.0.1"
 sql_port: int = 3306
 sql_connection_string: str = f"{sql_scheme}://{sql_username}:{sql_password}@{sql_host}:{sql_port}/{sql_database_name}?charset=utf8"
