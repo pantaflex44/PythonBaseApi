@@ -1,6 +1,6 @@
 # PythonBaseApi
 
-Project base to create web Rest API with Python over Fastify framework.
+Project base to create web Rest API with Python over FastAPI framework.
 
 ---
 
@@ -44,7 +44,7 @@ $ python -m api --db-install
 $ python -m api
 ```
 
-To naviguate in th API doc, use your browser at https://127.0.0.1:8443/docs#/
+To naviguate in the API doc, use your browser at https://127.0.0.1:8443/docs#/
 
 The default login credentials is:
 
