@@ -1,11 +1,7 @@
 # PythonBaseApi
 
-![GitHub version](https://img.shields.io/github/package-json/v/pantaflex44/PythonBaseApi)
 ![GitHub last commit](https://img.shields.io/github/last-commit/pantaflex44/PythonBaseApi)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/pantaflex44/PythonBaseApi)
-
-
-![GitHub release](https://img.shields.io/github/downloads/pantaflex44/PythonBaseApi/total)
 ![GitHub license](https://img.shields.io/github/license/pantaflex44/PythonBaseApi)
 ![GitHub stars](https://img.shields.io/github/stars/pantaflex44/PythonBaseApi)
 
