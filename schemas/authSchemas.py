@@ -164,8 +164,14 @@ class CreateSchema(BaseModel):
         orm_mode = True
 
 
-class UpdateSchema(UserBaseMin, ProfileBase, RoleBase):
-    updated_at: datetime = Field(datetime.now())
+class UpdateUsernameSchema(BaseModel):
+    username: str = Field(...)
+    #is_activated: bool = Field(False)
+    #is_blocked: bool = Field(False)
+
+    @validator('username', allow_reuse=True)
+    def username_format(cls, v: str):
+        return validate_username_format(v)
 
     class Config:
         orm_mode = True

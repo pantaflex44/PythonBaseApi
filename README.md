@@ -20,6 +20,9 @@ Some requirements are wanted on your system:
 
 **WARNING** : ```cert.pem``` and ```key.pem``` are required to use SSL with ```uvicorn``` server.
 
+
+<br/>
+
 **Clone the project**
 
 ```bash
@@ -29,6 +32,8 @@ $ rm -rf .git
 $ git init
 ```
 
+<br/>
+
 **Install Python environment**
 
 ```bash
@@ -37,11 +42,27 @@ $ source ./venv/bin/activate
 $ pip install -r requirements.txt
 ```
 
+<br/>
+
 **Install database and faker data**
 
 ```bash
 $ python -m api --db-install
 ```
+
+<br/>
+
+**Set personnal parameters**
+
+All parameters found in ```core\settings.py```
+
+To generate new JWT secret key:
+
+```bash
+$ python -m api --generate-jwt-secret
+```
+
+<br/>
 
 **Use this API as script**
 
@@ -51,10 +72,12 @@ $ python -m api
 
 To naviguate in the API doc, use your browser at https://127.0.0.1:8443/docs#/
 
-The default login credentials is:
+The default credentials is:
 
     - Username: administrator
     - Password: Admin1234!
+
+<br/>
 
 **Deployment**
 

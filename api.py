@@ -6,7 +6,7 @@ from types import ModuleType
 from typing import Dict
 
 from core import settings
-from core.functions import import_all_modules_from_dir, print_info, print_warning
+from core.functions import generate_key, import_all_modules_from_dir, print_info, print_warning
 from core.sql import install_db
 
 import uvicorn
@@ -25,7 +25,7 @@ from slowapi.errors import RateLimitExceeded
 
 
 print("")
-print_warning(f"{settings.app_title} loading...")
+print_warning(f"{settings.app_title} loading in {'debug' if settings.debug else 'release'} mode...")
 print("")
 
 app: FastAPI = FastAPI(Idebug=settings.debug,
@@ -56,10 +56,10 @@ app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_cr
 print_info(f"- CORS protection activated")
 
 # api rate limiter
-app.state.limiter = Limiter(key_func=get_remote_address, default_limits=[settings.default_rate_limiter])
+app.state.limiter = Limiter(key_func=get_remote_address, default_limits=[f"{settings.default_rate_limiter}/minute"])
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
-print_info(f"- Rate limiter activated: {settings.default_rate_limiter}")
+print_info(f"- Rate limiter activated: {settings.default_rate_limiter}/minute")
 
 # GZip compression
 if settings.use_gzip:
@@ -79,16 +79,25 @@ del modules, moduleName, module
 print_info("All routes loaded.")
 print("")
 
-# database installation
-if settings._argvs["--db-install"] in sys.argv:
-    print_warning("New installation wanted...")
-    install_db(app)
+if len(sys.argv) > 1:
+    print("------------------------------------------------")
+
+    # generate JWT secret key
+    if settings._argvs["--generate-jwt-secret"] in sys.argv:
+        print("JWT secret key generator:")
+        print(generate_key())
+
+    # database installation
+    if settings._argvs["--db-install"] in sys.argv:
+        print_warning("New installation wanted...")
+        install_db(app)
+
+    print("------------------------------------------------")
 
 
 if __name__ == "__main__":
-    if settings._argvs["--db-install"] in sys.argv:
-        sys.exit(
-            "\nAPI initialization ended with success.\nTo launch server, remove all installation flags.\n")
+    if len(sys.argv) > 1:
+        sys.exit("\nAPI initialization ended with success.\nTo launch server, remove all flags.\n")
 
     # dev entry point : python -m api
     uvicorn.run("api:app",

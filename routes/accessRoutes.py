@@ -4,7 +4,7 @@
 from typing import Optional
 
 from core import settings
-from core.authBearer import access
+from core.authBearer import role_access
 
 from fastapi import (
     Body,
@@ -45,7 +45,7 @@ router: APIRouter = APIRouter(prefix="/accesses", tags=["accesses"])
 @router.get('/list', status_code=status.HTTP_200_OK, response_model=list[AccessSchema])
 async def route_get_all_accesses(offset: Optional[int] = Query(0, ge=0),
                                  limit: Optional[int] = Query(100, ge=1),
-                                 credentials: CurrentCredentials = Depends(access)):
+                                 credentials: CurrentCredentials = Depends(role_access)):
     """Get all accesses rules
 
     Args:
@@ -66,7 +66,7 @@ async def route_get_all_accesses(offset: Optional[int] = Query(0, ge=0),
 
 @router.get('/get/{id}', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_get_unique_access(id: int = Path(..., ge=1),
-                                  credentials: CurrentCredentials = Depends(access)):
+                                  credentials: CurrentCredentials = Depends(role_access)):
     """Get an access rule from her ID
 
     Args:
@@ -91,7 +91,7 @@ async def route_get_unique_access(id: int = Path(..., ge=1),
 async def route_get_all_accesses_for_role(role_id: int = Path(..., ge=1),
                                           offset: Optional[int] = Query(0, ge=0),
                                           limit: Optional[int] = Query(100, ge=1),
-                                          credentials: CurrentCredentials = Depends(access)):
+                                          credentials: CurrentCredentials = Depends(role_access)):
     """Get accesses rules of role
 
     Args:
@@ -124,7 +124,7 @@ async def route_get_all_accesses_for_role(role_id: int = Path(..., ge=1),
 @router.put('/{access_id}/add_role', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_add_role_to_access(access_id: int = Path(..., ge=1),
                                    add: AddRemoveRoleSchema = Body(...),
-                                   credentials: CurrentCredentials = Depends(access)):
+                                   credentials: CurrentCredentials = Depends(role_access)):
     """Associate role to an access
 
     Args:
@@ -149,7 +149,7 @@ async def route_add_role_to_access(access_id: int = Path(..., ge=1),
 @router.put('/{access_id}/add_roles', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_add_roles_to_access(access_id: int = Path(..., ge=1),
                                     add: AddRemoveRolesSchema = Body(...),
-                                    credentials: CurrentCredentials = Depends(access)):
+                                    credentials: CurrentCredentials = Depends(role_access)):
     """Associate roles to an access
 
     Args:
@@ -174,7 +174,7 @@ async def route_add_roles_to_access(access_id: int = Path(..., ge=1),
 @router.put('/{access_id}/remove_role', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_remove_role_to_access(access_id: int = Path(..., ge=1),
                                       remove: AddRemoveRoleSchema = Body(...),
-                                      credentials: CurrentCredentials = Depends(access)):
+                                      credentials: CurrentCredentials = Depends(role_access)):
     """Dissociate role to an access
 
     Args:
@@ -199,7 +199,7 @@ async def route_remove_role_to_access(access_id: int = Path(..., ge=1),
 @router.put('/{access_id}/remove_roles', status_code=status.HTTP_200_OK, response_model=AccessSchema)
 async def route_remove_roles_to_access(access_id: int = Path(..., ge=1),
                                        remove: AddRemoveRolesSchema = Body(...),
-                                       credentials: CurrentCredentials = Depends(access)):
+                                       credentials: CurrentCredentials = Depends(role_access)):
     """Dissociate roles to an access
 
     Args:

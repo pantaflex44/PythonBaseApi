@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-import asyncio
-from datetime import datetime
 import jwt
 import time
 import secrets
+from datetime import datetime
 from typing import Any, Dict
 
 from core import settings
 from core.sql import get_db
 
-from fastapi import Depends, Request, HTTPException, Response, status
+from fastapi import Depends, Path, Request, HTTPException, Response, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from sqlalchemy.orm import Session
 
-from models.authModels import Role, User, Access
-from models.methods.authMethods import get_higher_role_level, get_user
-from schemas.authSchemas import CurrentCredentials
+from models.authModels import User
+from models.methods.authMethods import get_user, is_allowed_level
 
-from schemas.authSchemas import UserProfile
+from schemas.authSchemas import CurrentCredentials, UserProfile
 
 
 def signJWT(id: int, username: str) -> Dict[str, str]:
@@ -208,49 +206,45 @@ class Auth(HTTPBearer):
         return user
 
 
-async def access(request: Request, db: Session = Depends(get_db), credentials: CurrentCredentials = Depends(Auth())):
+async def role_access(request: Request, credentials: CurrentCredentials = Depends(Auth())):
     """Access middleware.
+    Current user role is allowed or not.
     Used with route dependency injection.
 
     Args:
         request (Request): Fastapi request
-        db (Session, optional): Database session. Defaults to Depends(get_db).
         credentials (CurrentCredentials, optional): Authentification controller instance. Defaults to Depends(Auth()).
 
     Raises:
-        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - No access rights found for this route
         HTTPException: HTTP_401_UNAUTHORIZED - Unauthorized
 
     Returns:
         CurrentCredentials: Authentification controller instance
     """
-    authorized = False
+    allowed: bool = is_allowed_level(route_name=request.scope['endpoint'].__name__,
+                                     wanted_level=credentials.current_user.role_level)
 
-    routeName = request.scope['endpoint'].__name__
-    if len(routeName) > 6 and routeName[:6].lower() == "route_":
-        routeName = routeName[6:]
-
-        access: Access = db.query(Access).filter(Access.route_name.like(routeName)).first()
-        if access is None:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail="No access rights found for this route.")
-
-        allowed_levels = []
-        for id in access.role_ids:
-            role: Role = db.query(Role).filter(Role.id == id).first()
-            if role is None:
-                continue
-            allowed_levels.append(role.role_level)
-        allowed_levels = sorted(allowed_levels, reverse=True)
-
-        higher_role_level: int = get_higher_role_level()
-        for level in allowed_levels:
-            if credentials.current_user.role_level == level or credentials.current_user.role_level == higher_role_level:
-                authorized = True
-                break
-
-    if not authorized:
+    if not allowed:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Unauthorized.")
 
     return credentials
+
+
+async def user_or_role_access(request: Request, user_id: int = Path(0), credentials: CurrentCredentials = Depends(Auth())):
+    """Access middleware.
+    Current user id or user role role are allowed or not.
+    Used with route dependency injection.
+
+    Args:
+        request (Request): Fastapi request
+        user_id (int, optional): User ID found in route path. Defaults to Path(0).
+        credentials (CurrentCredentials, optional): Authentification controller instance. Defaults to Depends(Auth()).
+
+    Returns:
+        CurrentCredentials: Authentification controller instance
+    """
+    if user_id == credentials.current_user.id:
+        return credentials
+
+    return await role_access(request, credentials)

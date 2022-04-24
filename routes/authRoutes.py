@@ -3,14 +3,11 @@
 
 
 from core import settings
-from core.authBearer import access, clearTokenCookie, createToken
+from core.authBearer import role_access, clearTokenCookie, createToken
 from core.functions import sha512_compare
-from core.sql import get_db
 
 from fastapi import Body, Depends, status, APIRouter, HTTPException, Response, Request
 from fastapi.responses import JSONResponse
-
-from sqlalchemy.orm import Session
 
 from models.authModels import User
 from models.methods.authMethods import get_user_ex
@@ -70,7 +67,7 @@ async def route_logout(request: Request, response: Response):
 @router.post('/update_token', status_code=status.HTTP_200_OK, response_model=TokenSchema)
 async def route_update_token(request: Request, response: Response,
                              update: UpdateTokenSchema = Body(...),
-                             credentials: CurrentCredentials = Depends(access)):
+                             credentials: CurrentCredentials = Depends(role_access)):
     """Update access Token while not expired
 
     Args:
@@ -93,7 +90,7 @@ async def route_update_token(request: Request, response: Response,
 
 
 @router.get('/me', status_code=status.HTTP_200_OK, response_model=UserProfile)
-async def route_me(credentials: CurrentCredentials = Depends(access)):
+async def route_me(credentials: CurrentCredentials = Depends(role_access)):
     """Get the connected user account and profile
 
     Args:

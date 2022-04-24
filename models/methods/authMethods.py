@@ -3,7 +3,7 @@
 
 from types import MethodType
 
-from fastapi import HTTPException, Query, status
+from fastapi import Query
 
 from sqlalchemy import asc, desc
 
@@ -15,6 +15,54 @@ from sqlalchemy.orm import Session
 from models.authModels import Access, User, Profile, Role
 
 from schemas.authSchemas import AccessSchema, RoleSchema, UserProfile, UserProfileEx
+
+
+def get_allowed_levels(route_name: str) -> list[int]:
+    """Get route allowed levels
+
+    Args:
+        route_name (str): Name of the route (started with 'route_'...)
+
+    Returns:
+        list[int]: List of allowed levels
+    """
+    db: Session = db_session.get()
+
+    allowed_levels: list[int] = []
+
+    if len(route_name) > 6 and route_name[:6].lower() == "route_":
+        route_name = route_name[6:]
+
+        access: Access = db.query(Access).filter(Access.route_name.like(route_name)).first()
+        if access is not None:
+            for id in access.role_ids:
+                role: Role = db.query(Role).filter(Role.id == id).first()
+                if role is None:
+                    continue
+                allowed_levels.append(role.role_level)
+
+            allowed_levels = sorted(allowed_levels, reverse=True)
+
+    return allowed_levels
+
+
+def is_allowed_level(route_name: str, wanted_level: int) -> bool:
+    """Is a wnted level allowed for a route
+
+    Args:
+        route_name (str): Name of the route (started with 'route_'...)
+        wanted_level (int): Wanted level to verify
+
+    Returns:
+        bool: True, wanted level is allowed, else, False
+    """
+    allowed_levels: list[int] = get_allowed_levels(route_name)
+    higher_role_level: int = get_higher_role_level()
+    for level in allowed_levels:
+        if wanted_level == level or wanted_level == higher_role_level:
+            return True
+
+    return False
 
 
 def get_user_ex(filters: list[MethodType]) -> UserProfileEx:
@@ -143,6 +191,32 @@ def create_user(username: str, password: str, role_id: int) -> UserProfile:
     return user_profile
 
 
+def update_username(id: int, username: str) -> UserProfile:
+    """Update username
+
+    Args:
+        id (int): User ID
+        username (str): New username
+
+    Returns:
+        UserProfile: The updated user profile
+    """
+    db: Session = db_session.get()
+
+    user: User = get_user([User.id == id])
+    if user is None:
+        return None
+
+    db.query(User).filter(User.id == user.id).update({User.username: username})
+    db.commit()
+
+    user_profile: UserProfile = get_user([User.id == user.id])
+    if user_profile is None:
+        return None
+
+    return user_profile
+
+
 # ----------------------------- ACCESS -------------------------
 
 def get_access(filters: list[MethodType]) -> Access:
@@ -220,9 +294,13 @@ def add_role_to_access(access_id: int, role_id: int) -> Access:
 
     if role.id not in access.role_ids:
         access.role_ids = access.role_ids + [role.id]
-        db.add(access)
-        db.commit()
-        db.refresh(access)
+
+        try:
+            db.add(access)
+            db.commit()
+            db.refresh(access)
+        except:
+            return None
 
     return access
 
@@ -251,9 +329,12 @@ def add_roles_to_access(access_id: int, role_ids: list[int]) -> Access:
         if role.id not in access.role_ids:
             access.role_ids = access.role_ids + [role.id]
 
-    db.add(access)
-    db.commit()
-    db.refresh(access)
+    try:
+        db.add(access)
+        db.commit()
+        db.refresh(access)
+    except:
+        return None
 
     return access
 
@@ -279,11 +360,15 @@ def remove_role_to_access(access_id: int, role_id: int) -> Access:
         return None
 
     if role.id in access.role_ids and len(access.role_ids) > 1:
-        role_ids = access.role_ids
-        role_ids.remove(role_id)
-        db.query(Access).filter(Access.id == access.id).update({Access.role_ids: role_ids})
-        db.commit()
-        db.refresh(access)
+        try:
+            role_ids = access.role_ids
+            role_ids.remove(role_id)
+
+            db.query(Access).filter(Access.id == access.id).update({Access.role_ids: role_ids})
+            db.commit()
+            db.refresh(access)
+        except:
+            return None
 
     return access
 
@@ -339,9 +424,12 @@ def remove_roles_to_access(access_id: int, role_ids: list[int]) -> Access:
         if role.id in access.role_ids and len(access.role_ids) > 1:
             role_ids.remove(role_id)
 
-    db.query(Access).filter(Access.id == access.id).update({Access.role_ids: role_ids})
-    db.commit()
-    db.refresh(access)
+    try:
+        db.query(Access).filter(Access.id == access.id).update({Access.role_ids: role_ids})
+        db.commit()
+        db.refresh(access)
+    except:
+        return None
 
     return access
 
@@ -487,9 +575,13 @@ def create_role(role_name: str, role_level: int) -> Role:
     db: Session = db_session.get()
 
     role: Role = Role(role_name=role_name, role_level=role_level)
-    db.add(role)
-    db.commit()
-    db.refresh(role)
+
+    try:
+        db.add(role)
+        db.commit()
+        db.refresh(role)
+    except:
+        return None
 
     return role
 
@@ -517,9 +609,12 @@ def update_role(role_id: int, role_name: str = None, role_level: int = None) -> 
     if role_level is None:
         role_level = role.role_level
 
-    db.query(Role).filter(Role.id == role_id).update({Role.role_name: role_name, Role.role_level: role_level})
-    db.commit()
-    db.refresh(role)
+    try:
+        db.query(Role).filter(Role.id == role_id).update({Role.role_name: role_name, Role.role_level: role_level})
+        db.commit()
+        db.refresh(role)
+    except:
+        return None
 
     return role
 

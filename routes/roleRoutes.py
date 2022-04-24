@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from core import settings
 
-from core.authBearer import access
+from core.authBearer import role_access
 
 from schemas.authSchemas import CurrentCredentials, RoleBase, RoleSchema, UserProfile
 
@@ -20,7 +20,7 @@ router: APIRouter = APIRouter(prefix="/roles", tags=["roles"])
 @router.get('/list', status_code=status.HTTP_200_OK, response_model=list[RoleSchema])
 async def route_get_all_roles(offset: Optional[int] = Query(0, ge=0),
                               limit: Optional[int] = Query(100, ge=1),
-                              credentials: CurrentCredentials = Depends(access)):
+                              credentials: CurrentCredentials = Depends(role_access)):
     """Get all user roles
 
     Args:
@@ -40,7 +40,7 @@ async def route_get_all_roles(offset: Optional[int] = Query(0, ge=0),
 
 
 @router.get('/list_defaults', status_code=status.HTTP_200_OK, response_model=list[RoleBase])
-async def route_get_all_default_roles(credentials: CurrentCredentials = Depends(access)):
+async def route_get_all_default_roles(credentials: CurrentCredentials = Depends(role_access)):
     """Get all default user roles
 
     Args:
@@ -56,13 +56,13 @@ async def route_get_all_default_roles(credentials: CurrentCredentials = Depends(
     return roles_bases
 
 
-@router.get('/get/{id}', status_code=status.HTTP_200_OK, response_model=RoleSchema)
-async def route_get_unique_role(id: int = Path(..., ge=1),
-                                credentials: CurrentCredentials = Depends(access)):
+@router.get('/get/{role_id}', status_code=status.HTTP_200_OK, response_model=RoleSchema)
+async def route_get_unique_role(role_id: int = Path(..., ge=1),
+                                credentials: CurrentCredentials = Depends(role_access)):
     """Get a role from his ID
 
     Args:
-        id (int, optional): Access rule ID. Defaults to Path(..., ge=1).
+        role_id (int, optional): Access rule ID. Defaults to Path(..., ge=1).
         credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
 
     Raises:
@@ -71,7 +71,7 @@ async def route_get_unique_role(id: int = Path(..., ge=1),
     Returns:
         RoleSchema: Role found
     """
-    role: Role = get_role([Role.id == id])
+    role: Role = get_role([Role.id == role_id])
     if role is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Role not found")
@@ -81,7 +81,7 @@ async def route_get_unique_role(id: int = Path(..., ge=1),
 
 @router.post('/create', status_code=status.HTTP_200_OK, response_model=RoleSchema)
 async def route_create_role(create: RoleBase = Body(...),
-                            credentials: CurrentCredentials = Depends(access)):
+                            credentials: CurrentCredentials = Depends(role_access)):
     """Create new role
 
     Args:
@@ -108,14 +108,14 @@ async def route_create_role(create: RoleBase = Body(...),
     return RoleSchema(**role.__dict__)
 
 
-@router.put('/update/{id}', status_code=status.HTTP_200_OK, response_model=RoleSchema)
-async def route_update_role(id: int = Path(..., ge=1),
+@router.put('/update/{role_id}', status_code=status.HTTP_200_OK, response_model=RoleSchema)
+async def route_update_role(role_id: int = Path(..., ge=1),
                             update: RoleBase = Body(...),
-                            credentials: CurrentCredentials = Depends(access)):
+                            credentials: CurrentCredentials = Depends(role_access)):
     """Update a Role
 
     Args:
-        id (int, optional): Role ID to update. Defaults to Path(..., ge=1).
+        role_id (int, optional): Role ID to update. Defaults to Path(..., ge=1).
         update (RoleBase, optional): Update data. Defaults to Body(...).
         credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
 
@@ -135,7 +135,7 @@ async def route_update_role(id: int = Path(..., ge=1),
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Role level already exists")
 
-    role: Role = update_role(id, update.role_name, update.role_level)
+    role: Role = update_role(role_id, update.role_name, update.role_level)
     if role is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Role not found")
@@ -143,19 +143,19 @@ async def route_update_role(id: int = Path(..., ge=1),
     return RoleSchema(**role.__dict__)
 
 
-@router.delete('/delete/{id}', status_code=status.HTTP_200_OK, response_model=bool)
-async def route_delete_role(id: int = Path(..., ge=1),
-                            credentials: CurrentCredentials = Depends(access)):
+@router.delete('/delete/{role_id}', status_code=status.HTTP_200_OK, response_model=bool)
+async def route_delete_role(role_id: int = Path(..., ge=1),
+                            credentials: CurrentCredentials = Depends(role_access)):
     """Delete a Role
 
     Args:
-        id (int, optional): Role ID to delete. Defaults to Path(..., ge=1).
+        role_id (int, optional): Role ID to delete. Defaults to Path(..., ge=1).
         credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
 
     Returns:
         bool: True, Role is deleted, else, False
     """
-    role: Role = get_role([Role.id == id])
+    role: Role = get_role([Role.id == role_id])
     if role is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Role not found")
@@ -165,8 +165,8 @@ async def route_delete_role(id: int = Path(..., ge=1),
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
                             detail="First delete all user accounts that subscribe to this role")
 
-    deleted: bool = delete_role(id)
+    deleted: bool = delete_role(role_id)
     if deleted:
-        remove_role_to_all_access(id)
+        remove_role_to_all_access(role_id)
 
     return deleted
