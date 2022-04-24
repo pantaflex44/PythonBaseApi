@@ -4,7 +4,7 @@
 from typing import Optional
 
 from core import settings
-from core.authBearer import role_access, clearTokenCookie, user_or_role_access
+from core.authBearer import role_access, user_or_role_access, clearTokenCookie
 
 from fastapi import (
     Body,
@@ -23,12 +23,16 @@ from models.methods.authMethods import (
     create_user,
     get_user,
     get_users,
+    update_active_state,
+    update_blocked_state,
     update_username,
     username_exists
 )
 
-from schemas.authSchemas import CurrentCredentials, UpdateUsernameSchema
 from schemas.authSchemas import (
+    CurrentCredentials,
+    UpdateStateSchema,
+    UpdateUsernameSchema,
     CreateSchema,
     UserProfile
 )
@@ -46,7 +50,7 @@ async def route_get_all_users(offset: Optional[int] = Query(0, ge=0),
     Args:
         offset (Optional[int], optional): Start index. Defaults to Query(0, ge=0).
         limit (Optional[int], optional): Quantity of returned rows. Defaults to Query(100, ge=1).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Returns:
         list[UserProfile]: List of User accounts and profiles
@@ -61,7 +65,7 @@ async def route_get_unique_user(user_id: int = Path(..., ge=1),
 
     Args:
         id (int, optional): User identifier. Defaults to Path(..., ge=1).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_404_NOT_FOUND - User not found
@@ -84,7 +88,7 @@ async def route_create_user(create: CreateSchema = Body(...),
 
     Args:
         create (CreateSchema, optional): User creation needed data. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_400_BAD_REQUEST - Username allready exists
@@ -115,7 +119,7 @@ async def route_update_username(request: Request, response: Response,
     Args:
         user_id (int, optional): The User ID. Defaults to Path(..., ge=1).
         update (UpdateUsernameSchema, optional): Update data. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(user_or_role_access).
 
     Raises:
         HTTPException: HTTP_400_BAD_REQUEST - Username allready exists
@@ -135,5 +139,55 @@ async def route_update_username(request: Request, response: Response,
 
     if user_id == credentials.current_user.id:
         clearTokenCookie(request, response)
+
+    return user
+
+
+@router.put('/update/{user_id}/active_state', status_code=status.HTTP_200_OK, response_model=UserProfile)
+async def route_update_active_state(user_id: int = Path(..., ge=1),
+                                    update: UpdateStateSchema = Body(...),
+                                    credentials: CurrentCredentials = Depends(role_access)):
+    """Update active state
+
+    Args:
+        user_id (int, optional): The User ID. Defaults to Path(..., ge=1).
+        update (UpdateStateSchema, optional): Update data. Defaults to Body(...).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
+
+    Raises:
+        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - Unable to update this user
+
+    Returns:
+        UserProfile:  Updated User account and his profile
+    """
+    user: UserProfile = update_active_state(user_id, update.state)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Unable to update this user.")
+
+    return user
+
+
+@router.put('/update/{user_id}/blocked_state', status_code=status.HTTP_200_OK, response_model=UserProfile)
+async def route_update_blocked_state(user_id: int = Path(..., ge=1),
+                                     update: UpdateStateSchema = Body(...),
+                                     credentials: CurrentCredentials = Depends(role_access)):
+    """Update blocked state
+
+    Args:
+        user_id (int, optional): The User ID. Defaults to Path(..., ge=1).
+        update (UpdateStateSchema, optional): Update data. Defaults to Body(...).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
+
+    Raises:
+        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - Unable to update this user
+
+    Returns:
+        UserProfile:  Updated User account and his profile
+    """
+    user: UserProfile = update_blocked_state(user_id, update.state)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Unable to update this user.")
 
     return user

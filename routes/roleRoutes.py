@@ -26,7 +26,7 @@ async def route_get_all_roles(offset: Optional[int] = Query(0, ge=0),
     Args:
         offset (Optional[int], optional): Start index. Defaults to Query(0, ge=0).
         limit (Optional[int], optional): Quantity of returned rows. Defaults to Query(100, ge=1).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Returns:
         list[RoleSchema]: List of users roles
@@ -44,7 +44,7 @@ async def route_get_all_default_roles(credentials: CurrentCredentials = Depends(
     """Get all default user roles
 
     Args:
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Returns:
         list[RoleBase]: List of users roles
@@ -63,7 +63,7 @@ async def route_get_unique_role(role_id: int = Path(..., ge=1),
 
     Args:
         role_id (int, optional): Access rule ID. Defaults to Path(..., ge=1).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_404_NOT_FOUND - Role not found
@@ -86,7 +86,7 @@ async def route_create_role(create: RoleBase = Body(...),
 
     Args:
         create (RoleBase, optional): New role data. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_400_BAD_REQUEST - Role name already exists
@@ -117,7 +117,7 @@ async def route_update_role(role_id: int = Path(..., ge=1),
     Args:
         role_id (int, optional): Role ID to update. Defaults to Path(..., ge=1).
         update (RoleBase, optional): Update data. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_400_BAD_REQUEST - Role name already exists
@@ -150,7 +150,7 @@ async def route_delete_role(role_id: int = Path(..., ge=1),
 
     Args:
         role_id (int, optional): Role ID to delete. Defaults to Path(..., ge=1).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Returns:
         bool: True, Role is deleted, else, False

@@ -74,7 +74,7 @@ async def route_update_token(request: Request, response: Response,
         request (Request): Fastapi request
         response (Response): Fastapi response
         update (UpdateTokenSchema, optional): Data needed to update token. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_401_UNAUTHORIZED - Unauthorized
@@ -94,7 +94,7 @@ async def route_me(credentials: CurrentCredentials = Depends(role_access)):
     """Get the connected user account and profile
 
     Args:
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Returns:
         UserProfile: User account and profile schemas

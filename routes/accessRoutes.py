@@ -51,7 +51,7 @@ async def route_get_all_accesses(offset: Optional[int] = Query(0, ge=0),
     Args:
         offset (Optional[int], optional): Start index. Defaults to Query(0, ge=0).
         limit (Optional[int], optional): Quantity of returned rows. Defaults to Query(100, ge=1).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Returns:
         list[AccessSchema]: List of accesses rules
@@ -71,7 +71,7 @@ async def route_get_unique_access(id: int = Path(..., ge=1),
 
     Args:
         id (int, optional): Access rule ID. Defaults to Path(..., ge=1).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_404_NOT_FOUND - Access not found
@@ -98,7 +98,7 @@ async def route_get_all_accesses_for_role(role_id: int = Path(..., ge=1),
         role_id (int, optional): Role ID to inspect. Defaults to Path(..., ge=1).
         offset (Optional[int], optional): Start index. Defaults to Query(0, ge=0).
         limit (Optional[int], optional): Quantity of returned data. Defaults to Query(100, ge=1).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_404_NOT_FOUND - Role not found
@@ -130,7 +130,7 @@ async def route_add_role_to_access(access_id: int = Path(..., ge=1),
     Args:
         access_id (int, optional): Access identifier. Defaults to Path(..., ge=1).
         add (AddRemoveRoleSchema, optional): Role ID to associate. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_404_NOT_FOUND - Access or Role not found
@@ -155,7 +155,7 @@ async def route_add_roles_to_access(access_id: int = Path(..., ge=1),
     Args:
         access_id (int, optional): Access identifier. Defaults to Path(..., ge=1).
         add (AddRemoveRolesSchema, optional): List of role IDs to associate. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_404_NOT_FOUND - Access or Role not found
@@ -180,7 +180,7 @@ async def route_remove_role_to_access(access_id: int = Path(..., ge=1),
     Args:
         access_id (int, optional): Access identifier. Defaults to Path(..., ge=1).
         remove (AddRemoveRoleSchema, optional): Role ID to remove. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_404_NOT_FOUND - Access or Role not found
@@ -205,7 +205,7 @@ async def route_remove_roles_to_access(access_id: int = Path(..., ge=1),
     Args:
         access_id (int, optional): Access identifier. Defaults to Path(..., ge=1).
         remove (AddRemoveRolesSchema, optional): List of role IDs to remove. Defaults to Body(...).
-        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(access).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
         HTTPException: HTTP_404_NOT_FOUND - Access or Role not found

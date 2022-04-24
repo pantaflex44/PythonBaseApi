@@ -217,6 +217,58 @@ def update_username(id: int, username: str) -> UserProfile:
     return user_profile
 
 
+def update_active_state(id: int, state: bool) -> UserProfile:
+    """Update active state
+
+    Args:
+        id (int): User ID
+        state (bool): New active state
+
+    Returns:
+        UserProfile: The updated user profile
+    """
+    db: Session = db_session.get()
+
+    user: User = get_user([User.id == id])
+    if user is None:
+        return None
+
+    db.query(User).filter(User.id == user.id).update({User.is_activated: state})
+    db.commit()
+
+    user_profile: UserProfile = get_user([User.id == user.id])
+    if user_profile is None:
+        return None
+
+    return user_profile
+
+
+def update_blocked_state(id: int, state: bool) -> UserProfile:
+    """Update blocked state
+
+    Args:
+        id (int): User ID
+        state (bool): New blocked state
+
+    Returns:
+        UserProfile: The updated user profile
+    """
+    db: Session = db_session.get()
+
+    user: User = get_user([User.id == id])
+    if user is None:
+        return None
+
+    db.query(User).filter(User.id == user.id).update({User.is_blocked: state})
+    db.commit()
+
+    user_profile: UserProfile = get_user([User.id == user.id])
+    if user_profile is None:
+        return None
+
+    return user_profile
+
+
 # ----------------------------- ACCESS -------------------------
 
 def get_access(filters: list[MethodType]) -> Access:

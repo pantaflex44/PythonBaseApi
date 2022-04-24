@@ -177,6 +177,13 @@ class UpdateUsernameSchema(BaseModel):
         orm_mode = True
 
 
+class UpdateStateSchema(BaseModel):
+    state: bool = Field(...)
+
+    class Config:
+        orm_mode = True
+
+
 class TokenSchema(BaseModel):
     access_token: str = Field(...)
     expires: int = Field(...)
