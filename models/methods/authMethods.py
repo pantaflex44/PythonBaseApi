@@ -203,7 +203,7 @@ def update_username(id: int, username: str) -> UserProfile:
     """
     db: Session = db_session.get()
 
-    user: User = get_user([User.id == id])
+    user: User = db.query(User).filter(User.id == id).first()
     if user is None:
         return None
 
@@ -229,7 +229,7 @@ def update_active_state(id: int, state: bool) -> UserProfile:
     """
     db: Session = db_session.get()
 
-    user: User = get_user([User.id == id])
+    user: User = db.query(User).filter(User.id == id).first()
     if user is None:
         return None
 
@@ -255,7 +255,7 @@ def update_blocked_state(id: int, state: bool) -> UserProfile:
     """
     db: Session = db_session.get()
 
-    user: User = get_user([User.id == id])
+    user: User = db.query(User).filter(User.id == id).first()
     if user is None:
         return None
 
@@ -267,6 +267,62 @@ def update_blocked_state(id: int, state: bool) -> UserProfile:
         return None
 
     return user_profile
+
+
+def update_user_profile(id: int, data: dict) -> UserProfile:
+    """Update user profile
+
+    Args:
+        id (int): User ID
+        data (dict): Profile data
+
+    Returns:
+        UserProfile: The updated user profile
+    """
+    db: Session = db_session.get()
+
+    user: User = db.query(User).filter(User.id == id).first()
+    if user is None:
+        return None
+
+    db.query(Profile).filter(Profile.id == user.profile_id).update(data)
+    db.commit()
+
+    user_profile: UserProfile = get_user([User.id == user.id])
+    if user_profile is None:
+        return None
+
+    return user_profile
+
+
+def delete_user(id: int) -> bool:
+    """Delete an user
+
+    Args:
+        id (int): The User ID
+
+    Returns:
+        bool: True, user is deleted, else, False
+    """
+    db: Session = db_session.get()
+
+    user: User = db.query(User).filter(User.id == id).first()
+    if user is None:
+        return False
+
+    role: Role = get_role([Role.id == user.role_id])
+    if role is None:
+        return False
+
+    if role.role_level >= get_higher_role_level():
+        nb_higher_roles: int = db.query(Role).filter([Role.role_level >= role.role_level]).count()
+        if nb_higher_roles <= 1:
+            return False
+
+    db.delete(user)
+    db.commit()
+
+    return True
 
 
 # ----------------------------- ACCESS -------------------------

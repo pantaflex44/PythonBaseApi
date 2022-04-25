@@ -21,16 +21,19 @@ from fastapi import (
 from models.methods.authMethods import (
     User,
     create_user,
+    delete_user,
     get_user,
     get_users,
     update_active_state,
     update_blocked_state,
+    update_user_profile,
     update_username,
     username_exists
 )
 
 from schemas.authSchemas import (
     CurrentCredentials,
+    ProfileBase,
     UpdateStateSchema,
     UpdateUsernameSchema,
     CreateSchema,
@@ -114,7 +117,7 @@ async def route_update_username(request: Request, response: Response,
                                 user_id: int = Path(..., ge=1),
                                 update: UpdateUsernameSchema = Body(...),
                                 credentials: CurrentCredentials = Depends(user_or_role_access)):
-    """Update username
+    """Update account username
 
     Args:
         user_id (int, optional): The User ID. Defaults to Path(..., ge=1).
@@ -147,7 +150,7 @@ async def route_update_username(request: Request, response: Response,
 async def route_update_active_state(user_id: int = Path(..., ge=1),
                                     update: UpdateStateSchema = Body(...),
                                     credentials: CurrentCredentials = Depends(role_access)):
-    """Update active state
+    """Update user active state
 
     Args:
         user_id (int, optional): The User ID. Defaults to Path(..., ge=1).
@@ -172,7 +175,7 @@ async def route_update_active_state(user_id: int = Path(..., ge=1),
 async def route_update_blocked_state(user_id: int = Path(..., ge=1),
                                      update: UpdateStateSchema = Body(...),
                                      credentials: CurrentCredentials = Depends(role_access)):
-    """Update blocked state
+    """Update user blocked state
 
     Args:
         user_id (int, optional): The User ID. Defaults to Path(..., ge=1).
@@ -191,3 +194,57 @@ async def route_update_blocked_state(user_id: int = Path(..., ge=1),
                             detail=f"Unable to update this user.")
 
     return user
+
+
+@router.put('/update/{user_id}/profile', status_code=status.HTTP_200_OK, response_model=UserProfile)
+async def route_update_user_profile(user_id: int = Path(..., ge=1),
+                                    update: ProfileBase = Body(...),
+                                    credentials: CurrentCredentials = Depends(user_or_role_access)):
+    """Update user profile
+
+    Args:
+        user_id (int, optional): The User ID. Defaults to Path(..., ge=1).
+        update (ProfileBase, optional): Update data. Defaults to Body(...).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(user_or_role_access).
+
+    Raises:
+        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - Unable to update this user profile
+
+    Returns:
+        UserProfile:  Updated User account and his profile
+    """
+    user: UserProfile = update_user_profile(user_id, update.__dict__)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Unable to update this user profile.")
+
+    return user
+
+
+@router.delete('/delete/{user_id}', status_code=status.HTTP_200_OK, response_model=bool)
+async def route_delete_user(user_id: int = Path(..., ge=1),
+                            credentials: CurrentCredentials = Depends(role_access)):
+    """Delete an user other than me
+
+    Args:
+        user_id (int, optional): The User ID. Defaults to Path(..., ge=1).
+        credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
+
+    Raises:
+        HTTPException: HTTP_404_NOT_FOUND - User not found
+        HTTPException: HTTP_405_METHOD_NOT_ALLOWED - Unable to delete your account
+
+    Returns:
+        bool: True, user is deleted, else, False
+    """
+    user: UserProfile = get_user([User.id == user_id])
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User not found")
+
+    if user_id == credentials.current_user.id:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                            detail="Unable to delete your account")
+
+    deleted: bool = delete_user(user_id)
+    return deleted
