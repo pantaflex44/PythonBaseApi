@@ -82,6 +82,15 @@ class Access(Base):
     role_ids = Column(ArrayType, default=[])
 
 
+class ResetTokens(Base):
+    """Reset tokens list
+    """
+    __tablename__ = "reset_tokens"
+    reset_key = Column(String(255), primary_key=True, index=True)
+    expires = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, primary_key=True, index=True)
+
+
 def up(db: Session, app: FastAPI):
     """Called with database installation
 

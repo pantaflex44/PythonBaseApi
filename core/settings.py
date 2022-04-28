@@ -31,6 +31,7 @@ cors_headers: list[str] = ["Authorization", "Access-Control-Allow-Origin"]
 cors_max_age: int = 600  # seconds
 default_rate_limiter: int = 1000  # per minute
 use_gzip: bool = True
+reset_tokens_expires = 60 * 60 * 8  # seconds
 
 # JWT settings
 jwt_algorithm: str = "HS256"
@@ -41,7 +42,7 @@ jwt_cookie_name: str = "PBA_Token"
 # SQL settings
 sql_scheme: str = "mysql+pymysql"
 sql_database_name: str = "PythonBaseApi"
-sql_username: str = "app"
+sql_username: str = "root"
 sql_password: str = "Admin1234!"
 sql_host: str = "127.0.0.1"
 sql_port: int = 3306

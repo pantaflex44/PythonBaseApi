@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 from datetime import datetime
+from time import time
 
 from core import settings
 
@@ -148,9 +149,10 @@ class UserProfileEx(UserBaseEx, ProfileBase, RoleBase):
 
 
 class CreateSchema(BaseModel):
-    username: str = Field(...)
-    password: str = Field(...)
-    role_id: int = Field(..., ge=1)
+    username: str = Field("")
+    password: str = Field("")
+    email: str = EmailStr("")
+    role_id: int = Field(1, ge=1)
 
     @validator('username', allow_reuse=True)
     def username_format(cls, v: str):
@@ -165,7 +167,7 @@ class CreateSchema(BaseModel):
 
 
 class UpdateUsernameSchema(BaseModel):
-    username: str = Field(...)
+    username: str = Field("")
     #is_activated: bool = Field(False)
     #is_blocked: bool = Field(False)
 
@@ -178,7 +180,7 @@ class UpdateUsernameSchema(BaseModel):
 
 
 class UpdateStateSchema(BaseModel):
-    state: bool = Field(...)
+    state: bool = Field(False)
 
     class Config:
         orm_mode = True
@@ -199,8 +201,8 @@ class ConnectionState(BaseModel):
 
 
 class LoginSchema(BaseModel):
-    username: str = Field(...)
-    password: str = Field(...)
+    username: str = Field("")
+    password: str = Field("")
 
     @validator('username', allow_reuse=True)
     def username_format(cls, v: str):
@@ -214,9 +216,30 @@ class LoginSchema(BaseModel):
         orm_mode = True
 
 
+class PasswordResetSchema(BaseModel):
+    username: str = Field("")
+    email: str = EmailStr("")
+
+    @validator('username', allow_reuse=True)
+    def username_format(cls, v: str):
+        return validate_username_format(v)
+
+    @validator('email', allow_reuse=True)
+    def email_format(cls, v: str):
+        return validate_email_format(v)
+
+    class Config:
+        orm_mode = True
+
+
+class PasswordResetTokenSchema(BaseModel):
+    reset_token: str = Field(...)
+    expires: int = Field(int(time()))
+
+
 class UpdateTokenSchema(BaseModel):
-    username: str = Field(...)
-    current_token: str = Field(...)
+    username: str = Field("")
+    current_token: str = Field("")
 
     @validator('username', allow_reuse=True)
     def username_format(cls, v: str):

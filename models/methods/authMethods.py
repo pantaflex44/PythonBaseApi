@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
+import base64
+from datetime import datetime
+from time import time
 from types import MethodType
 
 from fastapi import Query
 
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, delete, desc
 
 from core.functions import sha512_hash
 from core.sql import db_session
 
 from sqlalchemy.orm import Session
 
-from models.authModels import Access, User, Profile, Role
+from models.authModels import Access, ResetTokens, User, Profile, Role
 
 from schemas.authSchemas import AccessSchema, RoleSchema, UserProfile, UserProfileEx
 
@@ -156,7 +159,7 @@ def username_exists(username: str) -> bool:
     return False
 
 
-def create_user(username: str, password: str, role_id: int) -> UserProfile:
+def create_user(username: str, password: str, email: str, role_id: int) -> UserProfile:
     """Create new user
 
     Args:
@@ -173,7 +176,7 @@ def create_user(username: str, password: str, role_id: int) -> UserProfile:
     if role is None:
         return None
 
-    profile: Profile = Profile(display_name=username)
+    profile: Profile = Profile(display_name=username, email=email)
     user: User = User(username=username, hashed_password=sha512_hash(password),
                       is_activated=False, is_blocked=False, profile=profile, role=role)
 
@@ -744,5 +747,49 @@ def delete_role(role_id: int) -> bool:
 
     db.delete(role)
     db.commit()
+
+    return True
+
+
+# -------------------------- RESET TOKENS ----------------------
+
+def clean_expired_reset_tokens():
+    """Clean expired reset tokens
+    """
+    db: Session = db_session.get()
+
+    tokens: list[ResetTokens] = db.query(ResetTokens).filter(ResetTokens.expires < int(time())).all()
+    for token in tokens:
+        db.delete(token)
+
+    db.commit()
+
+
+def store_reset_token(user_id: int, reset_key: str, expires: int) -> bool:
+    """Store new reset tokens
+
+    Args:
+        user_id (int): User ID
+        reset_key (str): The reset key
+        expires (int): Expiration time
+
+    Returns:
+        bool: True, the new reset key stored, else, False
+    """
+    db: Session = db_session.get()
+
+    row: ResetTokens = db.query(ResetTokens).filter(ResetTokens.user_id == user_id).first()
+    if row is not None:
+        db.delete(row)
+        db.commit()
+
+    token: ResetTokens = ResetTokens(user_id=user_id,
+                                     reset_key=reset_key,
+                                     expires=expires)
+    try:
+        db.add(token)
+        db.commit()
+    except:
+        return False
 
     return True

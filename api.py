@@ -17,6 +17,7 @@ from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -60,6 +61,10 @@ app.state.limiter = Limiter(key_func=get_remote_address, default_limits=[f"{sett
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 print_info(f"- Rate limiter activated: {settings.default_rate_limiter}/minute")
+
+# sessions
+app.add_middleware(SessionMiddleware, secret_key=settings.jwt_secret, session_cookie='session',
+                   max_age=settings.jwt_expires, same_site='lax', https_only=True)
 
 # GZip compression
 if settings.use_gzip:

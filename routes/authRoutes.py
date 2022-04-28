@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-
+import base64
+from datetime import datetime, timedelta
+from time import time
 from core import settings
-from core.authBearer import role_access, clearTokenCookie, createToken
-from core.functions import sha512_compare
+from core.authBearer import encode_JWT, role_access, clear_token_cookie, create_token, sign_JWT
+from core.functions import generate_key, sha512_compare
 
 from fastapi import Body, Depends, status, APIRouter, HTTPException, Response, Request
 from fastapi.responses import JSONResponse
 
 from models.authModels import User
-from models.methods.authMethods import get_user_ex
+from models.methods.authMethods import clean_expired_reset_tokens, get_user, get_user_ex, store_reset_token
 
-from schemas.authSchemas import CurrentCredentials, TokenSchema, LoginSchema, UpdateTokenSchema
+from schemas.authSchemas import CurrentCredentials, PasswordResetSchema, PasswordResetTokenSchema, TokenSchema, LoginSchema, UpdateTokenSchema
 from schemas.authSchemas import UserProfile, UserProfileEx
 
 
@@ -46,7 +48,7 @@ async def route_login(request: Request, response: Response,
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Unauthorized: user account blocked or not activated.")
 
-    return createToken(userEx.id, userEx.username, request, response)
+    return create_token(userEx.id, userEx.username, request, response)
 
 
 @router.post('/logout')
@@ -60,7 +62,7 @@ async def route_logout(request: Request, response: Response):
     Returns:
         JSONResponse: Empty JSON response
     """
-    clearTokenCookie(request, response)
+    clear_token_cookie(request, response)
     return JSONResponse({}, status_code=status.HTTP_200_OK)
 
 
@@ -86,7 +88,7 @@ async def route_update_token(request: Request, response: Response,
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Unauthorized.")
 
-    return createToken(credentials.current_user.id, credentials.current_user.username, request, response)
+    return create_token(credentials.current_user.id, credentials.current_user.username, request, response)
 
 
 @router.get('/me', status_code=status.HTTP_200_OK, response_model=UserProfile)
@@ -100,3 +102,40 @@ async def route_me(credentials: CurrentCredentials = Depends(role_access)):
         UserProfile: User account and profile schemas
     """
     return credentials.current_user
+
+
+@router.post('/reset_password', status_code=status.HTTP_200_OK, response_model=PasswordResetTokenSchema)
+async def route_password_reset(request: Request, response: Response,
+                               password_reset: PasswordResetSchema = Body(...)):
+    """Create new reset password token
+
+    Args:
+        request (Request): Fastapi request
+        response (Response): Fastapi response
+        password_reset (PasswordResetSchema, optional): Password reset data. Defaults to Body(...).
+
+    Raises:
+        HTTPException: HTTP_404_NOT_FOUND - User not found
+        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - Unable to store new reset token
+
+    Returns:
+        PasswordResetTokenSchema: All password reset needed informations
+    """
+    clean_expired_reset_tokens()
+
+    user: UserProfile = get_user([User.username.like(password_reset.username.strip())])
+    if user is None or user.email != password_reset.email.strip():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="User not found.")
+
+    expires: int = int(time() + settings.reset_tokens_expires)
+    reset_key: str = generate_key()
+    if not store_reset_token(user.id, reset_key, expires):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Unable to store new reset token.")
+
+    jwt_token: str = encode_JWT(user.id, reset_key, expires)
+    reset_token: str = base64.b64encode(jwt_token.encode('utf8')).decode('utf8')
+
+    return PasswordResetTokenSchema(reset_token=reset_token,
+                                    expires=expires)

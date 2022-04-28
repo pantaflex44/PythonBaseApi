@@ -4,7 +4,7 @@
 from core import settings
 from core.sql import get_db
 
-from fastapi import Depends, status, APIRouter
+from fastapi import Depends, status, APIRouter, Request
 
 from sqlalchemy.orm import Session
 

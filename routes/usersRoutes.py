@@ -4,7 +4,7 @@
 from typing import Optional
 
 from core import settings
-from core.authBearer import role_access, user_or_role_access, clearTokenCookie
+from core.authBearer import role_access, user_or_role_access, clear_token_cookie
 
 from fastapi import (
     Body,
@@ -104,7 +104,7 @@ async def route_create_user(create: CreateSchema = Body(...),
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"Username '{create.username}' allready exists.")
 
-    user: UserProfile = create_user(create.username, create.password, create.role_id)
+    user: UserProfile = create_user(create.username, create.password, create.email, create.role_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Unable to create this user.")
@@ -141,7 +141,7 @@ async def route_update_username(request: Request, response: Response,
                             detail=f"Unable to update this user.")
 
     if user_id == credentials.current_user.id:
-        clearTokenCookie(request, response)
+        clear_token_cookie(request, response)
 
     return user
 

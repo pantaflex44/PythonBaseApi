@@ -21,7 +21,7 @@ from models.methods.authMethods import get_user, is_allowed_level
 from schemas.authSchemas import CurrentCredentials, UserProfile
 
 
-def signJWT(id: int, username: str) -> Dict[str, str]:
+def sign_JWT(id: int, username: str) -> Dict[str, str]:
     """Sign JWT token with user ID and username
 
     Args:
@@ -39,7 +39,22 @@ def signJWT(id: int, username: str) -> Dict[str, str]:
     return {"access_token": token, "csrf": csrf, "expires": expires}
 
 
-def decodeJWT(token: str) -> dict:
+def encode_JWT(user_id: int, data: str, expires: int) -> str:
+    """Create and encode a JWT token
+
+    Args:
+        data (str): Data to encode
+        expires (datetime): Expires datetime
+
+    Returns:
+        str: JWT token
+    """
+    payload: dict = {"user_id": user_id, "data": data, "expires": expires}
+    token: str = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    return token
+
+
+def decode_JWT(token: str) -> dict:
     """Decode JWT token
 
     Args:
@@ -55,7 +70,7 @@ def decodeJWT(token: str) -> dict:
         return None
 
 
-def setTokenCookie(token: Dict[str, str], request: Request, response: Response):
+def set_token_cookie(token: Dict[str, str], request: Request, response: Response):
     """Set the token cookie include associated CSRF token
 
     Args:
@@ -71,7 +86,7 @@ def setTokenCookie(token: Dict[str, str], request: Request, response: Response):
                         httponly=True, expires=expires_str, domain=request.client.host)
 
 
-def clearTokenCookie(request: Request, response: Response):
+def clear_token_cookie(request: Request, response: Response):
     """Destroy the token cookie
 
     Args:
@@ -81,7 +96,7 @@ def clearTokenCookie(request: Request, response: Response):
     response.delete_cookie(key=settings.jwt_cookie_name, secure=True, httponly=True, domain=request.client.host)
 
 
-def createToken(id: int, username: str, request: Request, response: Response) -> Dict[str, str]:
+def create_token(id: int, username: str, request: Request, response: Response) -> Dict[str, str]:
     """Create a token payload
 
     Args:
@@ -93,8 +108,8 @@ def createToken(id: int, username: str, request: Request, response: Response) ->
     Returns:
         Dict[str, str]: The token payload
     """
-    token: Dict[str, str] = signJWT(id, username)
-    setTokenCookie(token, request, response)
+    token: Dict[str, str] = sign_JWT(id, username)
+    set_token_cookie(token, request, response)
 
     del token['csrf']
     return token
@@ -137,7 +152,7 @@ class Auth(HTTPBearer):
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                     detail="Invalid authentication scheme.")
 
-            bearer: dict = self.verify_jwt(credentials.credentials)
+            bearer: dict = self.verify_JWT(credentials.credentials)
             if not bearer['isTokenValid'] or "csrf" not in bearer['payload']:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                     detail="Invalid token or expired token.")
@@ -154,7 +169,7 @@ class Auth(HTTPBearer):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Invalid authorization code.")
 
-    def verify_jwt(self, jwtoken: str) -> dict:
+    def verify_JWT(self, jwtoken: str) -> dict:
         """Verify JWT token
 
         Args:
@@ -166,7 +181,7 @@ class Auth(HTTPBearer):
         isTokenValid: bool = False
 
         try:
-            payload: dict = decodeJWT(jwtoken)
+            payload: dict = decode_JWT(jwtoken)
         except:
             payload = None
 
@@ -233,7 +248,7 @@ async def role_access(request: Request, credentials: CurrentCredentials = Depend
 
 async def user_or_role_access(request: Request, user_id: int = Path(0), credentials: CurrentCredentials = Depends(Auth())):
     """Access middleware.
-    Current user id or user role role are allowed or not.
+    Current user id or user role are allowed or not.
     Used with route dependency injection.
 
     Args:
@@ -248,3 +263,23 @@ async def user_or_role_access(request: Request, user_id: int = Path(0), credenti
         return credentials
 
     return await role_access(request, credentials)
+
+
+async def user_access(request: Request, user_id: int = Path(0), credentials: CurrentCredentials = Depends(Auth())):
+    """Access middleware.
+    Current user id are allowed or not.
+    Used with route dependency injection.
+
+    Args:
+        request (Request): Fastapi request
+        user_id (int, optional): User ID found in route path. Defaults to Path(0).
+        credentials (CurrentCredentials, optional): Authentification controller instance. Defaults to Depends(Auth()).
+
+    Returns:
+        CurrentCredentials: Authentification controller instance
+    """
+    if user_id != credentials.current_user.id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Unauthorized.")
+
+    return credentials
