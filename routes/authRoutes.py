@@ -2,26 +2,63 @@
 # -*- encoding: utf-8 -*-
 
 import base64
-from datetime import datetime, timedelta
 from time import time
 from core import settings
-from core.authBearer import decode_JWT, encode_JWT, role_access, clear_token_cookie, create_token, sign_JWT
-from core.functions import generate_key, sha512_compare
+from core.authBearer import (
+    decode_JWT,
+    encode_JWT,
+    role_access,
+    clear_token_cookie,
+    create_token
+)
 
-from fastapi import Body, Depends, status, APIRouter, HTTPException, Response, Request
+from core.functions import (
+    generate_key,
+    sha512_compare
+)
+
+from fastapi import (
+    Body,
+    Depends,
+    status,
+    APIRouter,
+    HTTPException,
+    Response,
+    Request
+)
+
 from fastapi.responses import JSONResponse
 
-from models.authModels import User
-from models.methods.authMethods import clean_expired_reset_tokens, get_user, get_user_ex, store_reset_token, update_password
+from fastapi_versioning import version
 
-from schemas.authSchemas import CurrentCredentials, NewPasswordSchema, PasswordResetSchema, PasswordResetTokenSchema, TokenSchema, LoginSchema, UpdateTokenSchema
-from schemas.authSchemas import UserProfile, UserProfileEx
+from models.authModels import User
+
+from models.methods.authMethods import (
+    clean_expired_reset_tokens,
+    get_user,
+    get_user_ex,
+    store_reset_token,
+    update_password
+)
+
+from schemas.authSchemas import (
+    CurrentCredentials,
+    NewPasswordSchema,
+    PasswordResetSchema,
+    PasswordResetTokenSchema,
+    TokenSchema,
+    LoginSchema,
+    UpdateTokenSchema,
+    UserProfile,
+    UserProfileEx
+)
 
 
 router: APIRouter = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post('/login', status_code=status.HTTP_200_OK, response_model=TokenSchema)
+@version(1)
 async def route_login(request: Request, response: Response,
                       login: LoginSchema = Body(...)):
     """Application login
@@ -61,6 +98,7 @@ async def route_login(request: Request, response: Response,
 
 
 @router.post('/logout')
+@version(1)
 async def route_logout(request: Request, response: Response):
     """Logout
 
@@ -76,6 +114,7 @@ async def route_logout(request: Request, response: Response):
 
 
 @router.post('/update_token', status_code=status.HTTP_200_OK, response_model=TokenSchema)
+@version(1)
 async def route_update_token(request: Request, response: Response,
                              update: UpdateTokenSchema = Body(...),
                              credentials: CurrentCredentials = Depends(role_access)):
@@ -101,6 +140,7 @@ async def route_update_token(request: Request, response: Response,
 
 
 @router.get('/me', status_code=status.HTTP_200_OK, response_model=UserProfile)
+@version(1)
 async def route_me(credentials: CurrentCredentials = Depends(role_access)):
     """Get the connected user account and profile
 
@@ -114,6 +154,7 @@ async def route_me(credentials: CurrentCredentials = Depends(role_access)):
 
 
 @router.post('/reset_password', status_code=status.HTTP_200_OK, response_model=PasswordResetTokenSchema)
+@version(1)
 async def route_password_reset(password_reset: PasswordResetSchema = Body(...)):
     """Create new reset password token
 
@@ -148,6 +189,7 @@ async def route_password_reset(password_reset: PasswordResetSchema = Body(...)):
 
 
 @router.post('/new_password', status_code=status.HTTP_200_OK, response_model=UserProfile)
+@version(1)
 async def route_new_password(new_password: NewPasswordSchema = Body(...)):
     """Change user password
 

@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from core.functions import print_info, sha512_hash
 from core.sql import Base
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Text, Enum, TypeDecorator, desc
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Text, TypeDecorator, desc
 from sqlalchemy.orm import Session, relationship, backref
 from sqlalchemy.sql import func
 

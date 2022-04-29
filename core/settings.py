@@ -9,7 +9,7 @@ debug: bool = True
 # app informations
 app_title: str = "PythonBaseApi"
 app_description: str = "Project base to create web Rest API with Python over Fastify framework."
-app_version: str = "0.1.0"
+app_version: str = "1.0.0"
 app_license: Dict[str, str] = {"name": "MIT License",
                                "url": "https://opensource.org/licenses/MIT"}
 app_contact: Dict[str, str] = {"name": "Christophe LEMOINE",

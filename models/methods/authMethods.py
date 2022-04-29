@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-import base64
-from datetime import datetime
 from time import time
 from types import MethodType
 
@@ -11,12 +9,12 @@ from fastapi import Query
 from sqlalchemy import asc, delete, desc
 from core import settings
 
-from core.functions import generate_key, sha512_hash
+from core.functions import sha512_hash
 from core.sql import db_session
 
 from sqlalchemy.orm import Session
 
-from models.authModels import Access, ActivationTokens, ResetTokens, User, Profile, Role
+from models.authModels import Access, ResetTokens, User, Profile, Role
 
 from schemas.authSchemas import AccessSchema, RoleSchema, UserProfile, UserProfileEx
 

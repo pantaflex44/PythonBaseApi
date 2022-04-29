@@ -17,7 +17,10 @@ from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+
 from starlette.middleware.sessions import SessionMiddleware
+
+from fastapi_versioning import VersionedFastAPI
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -37,10 +40,6 @@ app: FastAPI = FastAPI(Idebug=settings.debug,
                        terms_of_service=settings.app_terms)
 
 print_info(f"- SQL engine initialized")
-
-# mount statics directory
-app.mount("/static", StaticFiles(directory="./statics"), name="static")
-print_info(f"- Statics directory mounted")
 
 # force HTTPS
 app.add_middleware(HTTPSRedirectMiddleware)
@@ -98,6 +97,17 @@ if len(sys.argv) > 1:
         install_db(app)
 
     print("------------------------------------------------")
+
+
+# API versionning
+app = VersionedFastAPI(app,
+                       version_format='{major}',
+                       prefix_format='/v{major}',
+                       enable_latest=True)
+
+# mount statics directory
+app.mount("/static", StaticFiles(directory="./statics"), name="static")
+print_info(f"- Statics directory mounted")
 
 
 if __name__ == "__main__":

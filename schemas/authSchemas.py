@@ -2,7 +2,6 @@
 # -*- encoding: utf-8 -*-
 
 from datetime import datetime
-from importlib.metadata import files
 from time import time
 
 from core import settings
