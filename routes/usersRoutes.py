@@ -20,8 +20,10 @@ from fastapi import (
 
 from models.methods.authMethods import (
     User,
+    create_activation_token,
     create_user,
     delete_user,
+    get_activation_token,
     get_user,
     get_users,
     update_active_state,
@@ -32,6 +34,7 @@ from models.methods.authMethods import (
 )
 
 from schemas.authSchemas import (
+    ActivationTokenResponseSchema,
     CurrentCredentials,
     ProfileBase,
     UpdateStateSchema,
@@ -94,8 +97,9 @@ async def route_create_user(create: CreateSchema = Body(...),
         credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
-        HTTPException: HTTP_400_BAD_REQUEST - Username allready exists
-        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - Unable to create this user
+        HTTPException: HTTP_400_BAD_REQUEST - Username allready exists.
+        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - Unable to create this user.
+        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - Unable to create activation token.
 
     Returns:
         UserProfile:  Created User account and initial default profile

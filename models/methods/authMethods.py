@@ -9,13 +9,14 @@ from types import MethodType
 from fastapi import Query
 
 from sqlalchemy import asc, delete, desc
+from core import settings
 
-from core.functions import sha512_hash
+from core.functions import generate_key, sha512_hash
 from core.sql import db_session
 
 from sqlalchemy.orm import Session
 
-from models.authModels import Access, ResetTokens, User, Profile, Role
+from models.authModels import Access, ActivationTokens, ResetTokens, User, Profile, Role
 
 from schemas.authSchemas import AccessSchema, RoleSchema, UserProfile, UserProfileEx
 
@@ -178,13 +179,15 @@ def create_user(username: str, password: str, email: str, role_id: int) -> UserP
 
     profile: Profile = Profile(display_name=username, email=email)
     user: User = User(username=username, hashed_password=sha512_hash(password),
-                      is_activated=False, is_blocked=False, profile=profile, role=role)
+                      is_activated=settings.auto_activate_user_account, is_blocked=False, profile=profile, role=role)
 
     try:
         db.add(user)
         db.commit()
         db.refresh(user)
-    except:
+    except Exception as ex:
+        db.rollback()
+        print(ex)
         return None
 
     user_profile: UserProfile = get_user([User.id == user.id])
@@ -411,6 +414,7 @@ def add_role_to_access(access_id: int, role_id: int) -> Access:
             db.commit()
             db.refresh(access)
         except:
+            db.rollback()
             return None
 
     return access
@@ -445,6 +449,7 @@ def add_roles_to_access(access_id: int, role_ids: list[int]) -> Access:
         db.commit()
         db.refresh(access)
     except:
+        db.rollback()
         return None
 
     return access
@@ -479,6 +484,7 @@ def remove_role_to_access(access_id: int, role_id: int) -> Access:
             db.commit()
             db.refresh(access)
         except:
+            db.rollback()
             return None
 
     return access
@@ -540,6 +546,7 @@ def remove_roles_to_access(access_id: int, role_ids: list[int]) -> Access:
         db.commit()
         db.refresh(access)
     except:
+        db.rollback()
         return None
 
     return access
@@ -692,6 +699,7 @@ def create_role(role_name: str, role_level: int) -> Role:
         db.commit()
         db.refresh(role)
     except:
+        db.rollback()
         return None
 
     return role
@@ -725,6 +733,7 @@ def update_role(role_id: int, role_name: str = None, role_level: int = None) -> 
         db.commit()
         db.refresh(role)
     except:
+        db.rollback()
         return None
 
     return role
@@ -790,6 +799,49 @@ def store_reset_token(user_id: int, reset_key: str, expires: int) -> bool:
         db.add(token)
         db.commit()
     except:
+        db.rollback()
         return False
 
     return True
+
+
+def update_password(reset_key: str, user_id: int, username: str, password: str) -> UserProfile:
+    """Update user password
+
+    Args:
+        reset_key (str): The reset token
+        user_id (int): The User ID
+        username (str): Relative username
+        password (str): New password
+
+    Returns:
+        UserProfile: Profile data
+    """
+    db: Session = db_session.get()
+
+    user: User = db.query(User).filter(User.id == user_id, User.username.like(username.strip())).first()
+    if user is None:
+        return None
+
+    row: ResetTokens = db.query(ResetTokens).filter(ResetTokens.user_id == user_id).first()
+    if row is None:
+        return None
+
+    if row.reset_key != reset_key:
+        db.delete(row)
+        db.commit()
+        return None
+
+    try:
+        db.query(User).filter(User.id == user_id, User.username.like(username.strip())).update(
+            {User.hashed_password: sha512_hash(password)}, synchronize_session='fetch')
+        db.commit()
+        db.refresh(user)
+    except:
+        db.rollback()
+        return None
+
+    db.delete(row)
+    db.commit()
+
+    return get_user([User.id == user.id])

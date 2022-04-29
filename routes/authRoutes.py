@@ -5,16 +5,16 @@ import base64
 from datetime import datetime, timedelta
 from time import time
 from core import settings
-from core.authBearer import encode_JWT, role_access, clear_token_cookie, create_token, sign_JWT
+from core.authBearer import decode_JWT, encode_JWT, role_access, clear_token_cookie, create_token, sign_JWT
 from core.functions import generate_key, sha512_compare
 
 from fastapi import Body, Depends, status, APIRouter, HTTPException, Response, Request
 from fastapi.responses import JSONResponse
 
 from models.authModels import User
-from models.methods.authMethods import clean_expired_reset_tokens, get_user, get_user_ex, store_reset_token
+from models.methods.authMethods import clean_expired_reset_tokens, get_user, get_user_ex, store_reset_token, update_password
 
-from schemas.authSchemas import CurrentCredentials, PasswordResetSchema, PasswordResetTokenSchema, TokenSchema, LoginSchema, UpdateTokenSchema
+from schemas.authSchemas import CurrentCredentials, NewPasswordSchema, PasswordResetSchema, PasswordResetTokenSchema, TokenSchema, LoginSchema, UpdateTokenSchema
 from schemas.authSchemas import UserProfile, UserProfileEx
 
 
@@ -32,8 +32,10 @@ async def route_login(request: Request, response: Response,
         login (LoginSchema, optional): Login informations. Defaults to Body(...).
 
     Raises:
-        HTTPException: HTTP_404_NOT_FOUND - User not found
-        HTTPException: HTTP_401_UNAUTHORIZED - Unauthorized: user account blocked or not activated
+        HTTPException: HTTP_404_NOT_FOUND - User not found.
+        HTTPException: HTTP_403_FORBIDDEN - Bad username or password.
+        HTTPException: HTTP_403_FORBIDDEN - User account not activated.
+        HTTPException: HTTP_403_FORBIDDEN - User account blocked.
 
     Returns:
         TokenSchema: Bearer security. Access Token to use for bearer credentials.
@@ -43,10 +45,17 @@ async def route_login(request: Request, response: Response,
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="User not found.")
 
-    if not sha512_compare(login.password.strip(), userEx.hashed_password) \
-            or not userEx.is_activated or userEx.is_blocked:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Unauthorized: user account blocked or not activated.")
+    if not sha512_compare(login.password.strip(), userEx.hashed_password):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Bad username or password.")
+
+    if not userEx.is_activated:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="User account not activated.")
+
+    if userEx.is_blocked:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="User account blocked.")
 
     return create_token(userEx.id, userEx.username, request, response)
 
@@ -79,14 +88,14 @@ async def route_update_token(request: Request, response: Response,
         credentials (CurrentCredentials, optional): Depend bearer credentials. Defaults to Depends(role_access).
 
     Raises:
-        HTTPException: HTTP_401_UNAUTHORIZED - Unauthorized
+        HTTPException: HTTP_401_UNAUTHORIZED - Invalid credentials.
 
     Returns:
         TokenSchema: Bearer security. Access Token to use for bearer credentials.
     """
     if credentials.current_user.username != update.username or credentials.token != update.current_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Unauthorized.")
+                            detail="Invalid credentials.")
 
     return create_token(credentials.current_user.id, credentials.current_user.username, request, response)
 
@@ -105,13 +114,10 @@ async def route_me(credentials: CurrentCredentials = Depends(role_access)):
 
 
 @router.post('/reset_password', status_code=status.HTTP_200_OK, response_model=PasswordResetTokenSchema)
-async def route_password_reset(request: Request, response: Response,
-                               password_reset: PasswordResetSchema = Body(...)):
+async def route_password_reset(password_reset: PasswordResetSchema = Body(...)):
     """Create new reset password token
 
     Args:
-        request (Request): Fastapi request
-        response (Response): Fastapi response
         password_reset (PasswordResetSchema, optional): Password reset data. Defaults to Body(...).
 
     Raises:
@@ -139,3 +145,48 @@ async def route_password_reset(request: Request, response: Response,
 
     return PasswordResetTokenSchema(reset_token=reset_token,
                                     expires=expires)
+
+
+@router.post('/new_password', status_code=status.HTTP_200_OK, response_model=UserProfile)
+async def route_new_password(new_password: NewPasswordSchema = Body(...)):
+    """Change user password
+
+    Args:
+        new_password (NewPasswordSchema, optional): New password data. Defaults to Body(...).
+
+    Raises:
+        HTTPException: HTTP_401_UNAUTHORIZED - Invalid reset password token.
+        HTTPException: HTTP_401_UNAUTHORIZED - Invalid payload.
+        HTTPException: HTTP_401_UNAUTHORIZED - Password reset token expired.
+        HTTPException: HTTP_500_INTERNAL_SERVER_ERROR - Unable to modify the user password.
+
+    Returns:
+        UserProfile: Profile data
+    """
+    payload: dict = None
+    try:
+        reset_token: str = base64.b64decode(new_password.reset_token.encode('utf8')).decode('utf8')
+        payload = decode_JWT(reset_token)
+    except:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Invalid reset password token.")
+
+    if payload is None or "user_id" not in payload.keys() \
+            or "data" not in payload.keys() or "expires" not in payload.keys():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Invalid payload.")
+
+    if payload['expires'] < time():
+        clean_expired_reset_tokens()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Password reset token expired.")
+
+    user: UserProfile = update_password(
+        payload['data'],
+        payload['user_id'],
+        new_password.username, new_password.password)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Unable to modify the user password.")
+
+    return user

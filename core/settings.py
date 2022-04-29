@@ -32,6 +32,7 @@ cors_max_age: int = 600  # seconds
 default_rate_limiter: int = 1000  # per minute
 use_gzip: bool = True
 reset_tokens_expires = 60 * 60 * 8  # seconds
+auto_activate_user_account = False
 
 # JWT settings
 jwt_algorithm: str = "HS256"

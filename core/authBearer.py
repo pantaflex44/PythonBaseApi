@@ -138,10 +138,10 @@ class Auth(HTTPBearer):
             db (Session, optional): Database session. Defaults to Depends(get_db).
 
         Raises:
-            HTTPException: HTTP_403_FORBIDDEN - Invalid authentication scheme
-            HTTPException: HTTP_403_FORBIDDEN - Invalid token or expired token
-            HTTPException: HTTP_403_FORBIDDEN - Invalid token
-            HTTPException: HTTP_403_FORBIDDEN - Invalid authorization code
+            HTTPException: HTTP_401_UNAUTHORIZED - Invalid authentication scheme
+            HTTPException: HTTP_401_UNAUTHORIZED - Invalid token or expired token
+            HTTPException: HTTP_401_UNAUTHORIZED - Invalid token
+            HTTPException: HTTP_401_UNAUTHORIZED - Invalid authorization code
 
         Returns:
             CurrentCredentials: Credential data. Current user, JWT token
@@ -149,25 +149,25 @@ class Auth(HTTPBearer):
         credentials: HTTPAuthorizationCredentials = await super(Auth, self).__call__(request)
         if credentials:
             if not credentials.scheme == "Bearer":
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                     detail="Invalid authentication scheme.")
 
             bearer: dict = self.verify_JWT(credentials.credentials)
             if not bearer['isTokenValid'] or "csrf" not in bearer['payload']:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                     detail="Invalid token or expired token.")
 
             bearerCsrf: str = bearer['payload']['csrf']
             cookieCsrf: str = request.cookies.get(settings.jwt_cookie_name)
             if bearerCsrf != cookieCsrf:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                    detail="Invalid token.")
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                    detail="Invalid token origin.")
 
             return CurrentCredentials(current_user=self.payload_to_user(bearer['payload'], db),
                                       token=credentials.credentials)
         else:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail="Invalid authorization code.")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="Invalid authorization credentials.")
 
     def verify_JWT(self, jwtoken: str) -> dict:
         """Verify JWT token
@@ -198,25 +198,30 @@ class Auth(HTTPBearer):
             db (Session): Database session
 
         Raises:
-            HTTPException: HTTP_401_UNAUTHORIZED - Unauthorized: invalid token
-            HTTPException: HTTP_401_UNAUTHORIZED - Unauthorized: user not found
-            HTTPException: HTTP_401_UNAUTHORIZED - Unauthorized: user account blocked or not activated
+            HTTPException: HTTP_401_UNAUTHORIZED - Malformed payload.
+            HTTPException: HTTP_404_NOT_FOUND - User not found.
+            HTTPException: HTTP_403_FORBIDDEN - User account not activated.
+            HTTPException: HTTP_403_FORBIDDEN - User account blocked.
 
         Returns:
             UserProfile: User and user profile schemas
         """
         if "id" not in payload or "username" not in payload:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="Unauthorized: invalid token.")
+                                detail="Malformed payload.")
 
         user: UserProfile = get_user([User.id == payload['id'], User.username.like(payload['username'])])
         if user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="Unauthorized: user not found.")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="User not found.")
 
-        if not user.is_activated or user.is_blocked:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="Unauthorized: user account blocked or not activated.")
+        if not user.is_activated:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="User account not activated.")
+
+        if user.is_blocked:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="User account blocked.")
 
         return user
 
@@ -231,7 +236,7 @@ async def role_access(request: Request, credentials: CurrentCredentials = Depend
         credentials (CurrentCredentials, optional): Authentification controller instance. Defaults to Depends(Auth()).
 
     Raises:
-        HTTPException: HTTP_401_UNAUTHORIZED - Unauthorized
+        HTTPException: HTTP_403_FORBIDDEN - Unauthorized: user role not allowed.
 
     Returns:
         CurrentCredentials: Authentification controller instance
@@ -240,8 +245,8 @@ async def role_access(request: Request, credentials: CurrentCredentials = Depend
                                      wanted_level=credentials.current_user.role_level)
 
     if not allowed:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Unauthorized.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="User role not allowed.")
 
     return credentials
 
@@ -275,11 +280,14 @@ async def user_access(request: Request, user_id: int = Path(0), credentials: Cur
         user_id (int, optional): User ID found in route path. Defaults to Path(0).
         credentials (CurrentCredentials, optional): Authentification controller instance. Defaults to Depends(Auth()).
 
+    Raises:
+        HTTPException: HTTP_403_FORBIDDEN - Unauthorized: user account not allowed.
+
     Returns:
         CurrentCredentials: Authentification controller instance
     """
     if user_id != credentials.current_user.id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Unauthorized.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="User account not allowed.")
 
     return credentials

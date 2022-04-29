@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 from datetime import datetime
+from importlib.metadata import files
 from time import time
 
 from core import settings
@@ -235,6 +236,23 @@ class PasswordResetSchema(BaseModel):
 class PasswordResetTokenSchema(BaseModel):
     reset_token: str = Field(...)
     expires: int = Field(int(time()))
+
+
+class NewPasswordSchema(BaseModel):
+    reset_token: str = Field(...)
+    username: str = Field(...)
+    password: str = Field(...)
+
+    @validator('username', allow_reuse=True)
+    def username_format(cls, v: str):
+        return validate_username_format(v)
+
+    @validator('password', allow_reuse=True)
+    def passwords_format(cls, v: str):
+        return validate_passwords_format(v)
+
+    class Config:
+        orm_mode = True
 
 
 class UpdateTokenSchema(BaseModel):
