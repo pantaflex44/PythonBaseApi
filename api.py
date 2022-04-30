@@ -108,6 +108,7 @@ app = VersionedFastAPI(app,
 # mount statics directory
 app.mount("/static", StaticFiles(directory="./statics"), name="static")
 print_info(f"- Statics directory mounted")
+print("")
 
 
 if __name__ == "__main__":
