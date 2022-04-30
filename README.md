@@ -1,9 +1,11 @@
 # PythonBaseApi v1.1
 
+![GitHub issues](https://img.shields.io/github/issues/pantaflex44/PythonBaseApi)
 ![GitHub last commit](https://img.shields.io/github/last-commit/pantaflex44/PythonBaseApi)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/pantaflex44/PythonBaseApi)
 ![GitHub license](https://img.shields.io/github/license/pantaflex44/PythonBaseApi)
 ![GitHub stars](https://img.shields.io/github/stars/pantaflex44/PythonBaseApi)
+![GitHub forks](https://img.shields.io/github/forks/pantaflex44/PythonBaseApi)
 
 Project base to create web Rest API with Python over FastAPI framework.
 
