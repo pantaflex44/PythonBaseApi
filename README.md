@@ -1,4 +1,4 @@
-# PythonBaseApi v1
+# PythonBaseApi v1.1
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/pantaflex44/PythonBaseApi)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/pantaflex44/PythonBaseApi)
@@ -70,7 +70,7 @@ $ python -m api --generate-jwt-secret
 $ python -m api
 ```
 
-To naviguate in the API doc, use your browser at https://127.0.0.1:8443/v1/docs
+To naviguate in the API doc, use your browser at https://127.0.0.1:8443/latest/docs
 
 The default credentials is:
 

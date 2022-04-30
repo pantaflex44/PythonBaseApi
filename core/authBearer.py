@@ -16,7 +16,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from models.authModels import User
-from models.methods.authMethods import get_user, is_allowed_level
+from models.methods.authMethods import get_user, is_allowed_level, store_user_expiration_time
 
 from schemas.authSchemas import CurrentCredentials, UserProfile
 
@@ -110,6 +110,8 @@ def create_token(id: int, username: str, request: Request, response: Response) -
     """
     token: Dict[str, str] = sign_JWT(id, username)
     set_token_cookie(token, request, response)
+
+    store_user_expiration_time(id, token['expires'])
 
     del token['csrf']
     return token

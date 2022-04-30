@@ -101,8 +101,8 @@ if len(sys.argv) > 1:
 
 # API versionning
 app = VersionedFastAPI(app,
-                       version_format='{major}',
-                       prefix_format='/v{major}',
+                       version_format='{major}.{minor}',
+                       prefix_format='/v_{major}_{minor}',
                        enable_latest=True)
 
 # mount statics directory

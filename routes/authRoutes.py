@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 import base64
+from datetime import datetime
 from time import time
 from core import settings
 from core.authBearer import (
@@ -58,7 +59,7 @@ router: APIRouter = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post('/login', status_code=status.HTTP_200_OK, response_model=TokenSchema)
-@version(1)
+@version(1, 1)
 async def route_login(request: Request, response: Response,
                       login: LoginSchema = Body(...)):
     """Application login
@@ -98,7 +99,7 @@ async def route_login(request: Request, response: Response,
 
 
 @router.post('/logout')
-@version(1)
+@version(1, 0)
 async def route_logout(request: Request, response: Response):
     """Logout
 
@@ -114,7 +115,7 @@ async def route_logout(request: Request, response: Response):
 
 
 @router.post('/update_token', status_code=status.HTTP_200_OK, response_model=TokenSchema)
-@version(1)
+@version(1, 1)
 async def route_update_token(request: Request, response: Response,
                              update: UpdateTokenSchema = Body(...),
                              credentials: CurrentCredentials = Depends(role_access)):
@@ -140,7 +141,7 @@ async def route_update_token(request: Request, response: Response,
 
 
 @router.get('/me', status_code=status.HTTP_200_OK, response_model=UserProfile)
-@version(1)
+@version(1, 0)
 async def route_me(credentials: CurrentCredentials = Depends(role_access)):
     """Get the connected user account and profile
 
@@ -154,7 +155,7 @@ async def route_me(credentials: CurrentCredentials = Depends(role_access)):
 
 
 @router.post('/reset_password', status_code=status.HTTP_200_OK, response_model=PasswordResetTokenSchema)
-@version(1)
+@version(1, 0)
 async def route_password_reset(password_reset: PasswordResetSchema = Body(...)):
     """Create new reset password token
 
@@ -189,7 +190,7 @@ async def route_password_reset(password_reset: PasswordResetSchema = Body(...)):
 
 
 @router.post('/new_password', status_code=status.HTTP_200_OK, response_model=UserProfile)
-@version(1)
+@version(1, 0)
 async def route_new_password(new_password: NewPasswordSchema = Body(...)):
     """Change user password
 

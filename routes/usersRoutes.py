@@ -52,7 +52,7 @@ router: APIRouter = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get('/list', status_code=status.HTTP_200_OK, response_model=list[UserProfile])
-@version(1)
+@version(1, 0)
 async def route_get_all_users(offset: Optional[int] = Query(0, ge=0),
                               limit: Optional[int] = Query(100, ge=1),
                               credentials: CurrentCredentials = Depends(role_access)):
@@ -70,7 +70,7 @@ async def route_get_all_users(offset: Optional[int] = Query(0, ge=0),
 
 
 @router.get('/get/{user_id}', status_code=status.HTTP_200_OK, response_model=UserProfile)
-@version(1)
+@version(1, 0)
 async def route_get_unique_user(user_id: int = Path(..., ge=1),
                                 credentials: CurrentCredentials = Depends(role_access)):
     """Get an user from his identifier
@@ -94,7 +94,7 @@ async def route_get_unique_user(user_id: int = Path(..., ge=1),
 
 
 @router.post('/create', status_code=status.HTTP_200_OK, response_model=UserProfile)
-@version(1)
+@version(1, 0)
 async def route_create_user(create: CreateSchema = Body(...),
                             credentials: CurrentCredentials = Depends(role_access)):
     """Create new user
@@ -124,7 +124,7 @@ async def route_create_user(create: CreateSchema = Body(...),
 
 
 @router.put('/update/{user_id}/username', status_code=status.HTTP_200_OK, response_model=UserProfile)
-@version(1)
+@version(1, 0)
 async def route_update_username(request: Request, response: Response,
                                 user_id: int = Path(..., ge=1),
                                 update: UpdateUsernameSchema = Body(...),
@@ -159,7 +159,7 @@ async def route_update_username(request: Request, response: Response,
 
 
 @router.put('/update/{user_id}/active_state', status_code=status.HTTP_200_OK, response_model=UserProfile)
-@version(1)
+@version(1, 0)
 async def route_update_active_state(user_id: int = Path(..., ge=1),
                                     update: UpdateStateSchema = Body(...),
                                     credentials: CurrentCredentials = Depends(role_access)):
@@ -185,7 +185,7 @@ async def route_update_active_state(user_id: int = Path(..., ge=1),
 
 
 @router.put('/update/{user_id}/blocked_state', status_code=status.HTTP_200_OK, response_model=UserProfile)
-@version(1)
+@version(1, 0)
 async def route_update_blocked_state(user_id: int = Path(..., ge=1),
                                      update: UpdateStateSchema = Body(...),
                                      credentials: CurrentCredentials = Depends(role_access)):
@@ -211,7 +211,7 @@ async def route_update_blocked_state(user_id: int = Path(..., ge=1),
 
 
 @router.put('/update/{user_id}/profile', status_code=status.HTTP_200_OK, response_model=UserProfile)
-@version(1)
+@version(1, 0)
 async def route_update_user_profile(user_id: int = Path(..., ge=1),
                                     update: ProfileBase = Body(...),
                                     credentials: CurrentCredentials = Depends(user_or_role_access)):
@@ -237,7 +237,7 @@ async def route_update_user_profile(user_id: int = Path(..., ge=1),
 
 
 @router.delete('/delete/{user_id}', status_code=status.HTTP_200_OK, response_model=bool)
-@version(1)
+@version(1, 0)
 async def route_delete_user(user_id: int = Path(..., ge=1),
                             credentials: CurrentCredentials = Depends(role_access)):
     """Delete an user other than me

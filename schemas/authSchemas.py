@@ -24,6 +24,7 @@ class UserBaseMin(BaseModel):
     username: str = Field(...)
     is_activated: bool = Field(False)
     is_blocked: bool = Field(False)
+    credential_expires: int = Field(0)
 
     @validator('username', allow_reuse=True)
     def username_format(cls, v: str):

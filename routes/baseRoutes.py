@@ -17,6 +17,6 @@ router: APIRouter = APIRouter(prefix="", tags=["bases"])
 
 
 @router.get('/about', status_code=status.HTTP_200_OK, response_model=AboutSchema)
-@version(1)
+@version(1, 0)
 async def route_about():
     return {"message": f"{settings.app_title} v{settings.app_version} - {settings.app_description}"}

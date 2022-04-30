@@ -48,7 +48,7 @@ router: APIRouter = APIRouter(prefix="/roles", tags=["roles"])
 
 
 @router.get('/list', status_code=status.HTTP_200_OK, response_model=list[RoleSchema])
-@version(1)
+@version(1, 0)
 async def route_get_all_roles(offset: Optional[int] = Query(0, ge=0),
                               limit: Optional[int] = Query(100, ge=1),
                               credentials: CurrentCredentials = Depends(role_access)):
@@ -71,7 +71,7 @@ async def route_get_all_roles(offset: Optional[int] = Query(0, ge=0),
 
 
 @router.get('/list_defaults', status_code=status.HTTP_200_OK, response_model=list[RoleBase])
-@version(1)
+@version(1, 0)
 async def route_get_all_default_roles(credentials: CurrentCredentials = Depends(role_access)):
     """Get all default user roles
 
@@ -89,7 +89,7 @@ async def route_get_all_default_roles(credentials: CurrentCredentials = Depends(
 
 
 @router.get('/get/{role_id}', status_code=status.HTTP_200_OK, response_model=RoleSchema)
-@version(1)
+@version(1, 0)
 async def route_get_unique_role(role_id: int = Path(..., ge=1),
                                 credentials: CurrentCredentials = Depends(role_access)):
     """Get a role from his ID
@@ -113,7 +113,7 @@ async def route_get_unique_role(role_id: int = Path(..., ge=1),
 
 
 @router.post('/create', status_code=status.HTTP_200_OK, response_model=RoleSchema)
-@version(1)
+@version(1, 0)
 async def route_create_role(create: RoleBase = Body(...),
                             credentials: CurrentCredentials = Depends(role_access)):
     """Create new role
@@ -143,7 +143,7 @@ async def route_create_role(create: RoleBase = Body(...),
 
 
 @router.put('/update/{role_id}', status_code=status.HTTP_200_OK, response_model=RoleSchema)
-@version(1)
+@version(1, 0)
 async def route_update_role(role_id: int = Path(..., ge=1),
                             update: RoleBase = Body(...),
                             credentials: CurrentCredentials = Depends(role_access)):
@@ -179,7 +179,7 @@ async def route_update_role(role_id: int = Path(..., ge=1),
 
 
 @router.delete('/delete/{role_id}', status_code=status.HTTP_200_OK, response_model=bool)
-@version(1)
+@version(1, 0)
 async def route_delete_role(role_id: int = Path(..., ge=1),
                             credentials: CurrentCredentials = Depends(role_access)):
     """Delete a Role

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
+from datetime import datetime
 from time import time
 from types import MethodType
 
@@ -193,6 +194,28 @@ def create_user(username: str, password: str, email: str, role_id: int) -> UserP
         return None
 
     return user_profile
+
+
+def store_user_expiration_time(user_id: int, expires: int) -> bool:
+    """Store last expiration time in the user account
+
+    Args:
+        user_id (int): The User ID
+        expires (datetime): Expiration time
+
+    Returns:
+        bool: True, expiration time is stored, else, False
+    """
+    db: Session = db_session.get()
+
+    try:
+        db.query(User).filter(User.id == user_id).update({User.credential_expires: expires})
+        db.commit()
+    except:
+        db.rollback()
+        return False
+
+    return True
 
 
 def update_username(id: int, username: str) -> UserProfile:

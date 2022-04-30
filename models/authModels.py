@@ -4,6 +4,7 @@
 import json
 
 from inspect import signature
+from time import time
 
 from core import settings
 
@@ -45,6 +46,7 @@ class User(Base):
     is_blocked = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    credential_expires = Column(Integer, default=int(time()))
     role_id = Column(Integer, ForeignKey('roles.id'))
     role = relationship("Role", backref=backref("users"), primaryjoin="User.role_id == Role.id")
     profile_id = Column(Integer, ForeignKey('users_profiles.id'))
