@@ -16,7 +16,7 @@ Project base to create web Rest API with Python over FastAPI framework.
 Some requirements are wanted on your system:
 
     - Python 3
-    - Pip
+    - Pip 3
     - Mysql Server 5.7
     - git
 
@@ -24,6 +24,37 @@ Some requirements are wanted on your system:
 
 
 <br/>
+
+<hr />
+
+### Automated installation
+
+<br />
+
+**Download the latest PythonBaseApi installer**
+
+```bash
+$ wget https://raw.githubusercontent.com/pantaflex44/PythonBaseApi/v1/pba-latest-installer.sh
+$ chmod +x pba-latest-installer.sh
+```
+
+<br />
+
+**Then, run the installer**
+
+```bash
+$ ./pba-latest-installer.sh
+```
+
+Your done! Enjoy with your new API project!
+
+
+<br />
+<hr />
+
+### Manual installation
+
+<br />
 
 **Clone the project**
 
@@ -41,7 +72,7 @@ $ git init
 ```bash
 $ python3 -m venv ./venv
 $ source ./venv/bin/activate
-$ pip install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 
 <br/>
@@ -49,7 +80,7 @@ $ pip install -r requirements.txt
 **Install database and faker data**
 
 ```bash
-$ python -m api --db-install
+$ python3 -m api --db-install
 ```
 
 <br/>
