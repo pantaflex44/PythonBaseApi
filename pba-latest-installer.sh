@@ -11,7 +11,7 @@ echo -e "${underline}Copyright${nounderline}: Copyright (c)2021-2022 Christophe 
 echo -e "${underline}License${nounderline}: MIT License"
 
 echo -e "\nThis bash script clone from GitHub and install locally new sample project."
-echo -e "When done, edit ${bold}core\settings.py${normal} and set all needed technical informations."
+echo -e "When done, edit ${bold}core/settings.py${normal} and set all needed technical informations."
 echo -e "Then, test your API in local with the command: ${bold}./serve.sh${normal} or ${bold}python3 -m api${normal}"
 
 echo -e "\n${bold}Clone the repositery...${normal}"
